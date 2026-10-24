@@ -1,18 +1,21 @@
 # Urna do Grêmio Estudantil
 
-Projeto da E.E. Prof. Armando Gomes de Araújo.
+Interface visual da E.E. Prof. Armando Gomes de Araújo.
 
-## Estrutura
+## Primeira versão — painel frontal em tela inteira
 
-- `index.html`: estrutura HTML.
-- `style.css`: a urna preenche a tela de forma proporcional e mantém a disposição visual da arte.
-- `script.js`: regiões transparentes clicáveis alinhadas ao teclado da imagem; simulação do voto.
-- `urna.webp`: imagem aprovada da urna enviada em formato WebP otimizado, mantendo sua composição visual.
+A tela do computador **é o painel da urna**. A arte `urna.webp` aparece recortada para remover o topo, a base e as laterais da caixa física. O painel do visor, os botões numéricos, BRANCO, CORRIGE, CONFIRMA e os logotipos permanecem no visual original, com os botões clicáveis no navegador.
 
-**Nota:** a imagem `urna.webp` já está incluída na raiz do repositório. O site utiliza essa mesma arte; não a substitua por recriações aproximadas, pois os arquivos de interface não reproduzem a arte por código. Não substituir por recriação aproximada.
+O projeto foi organizado em:
+- `index.html`: estrutura da interface;
+- `style.css`: enquadramento do painel frontal para ocupar 100% da janela;
+- `script.js`: teclas clicáveis, teclado físico e navegação;
+- `urna.webp`: imagem-base aprovada pelo professor.
 
-## Simulação
+**Como abrir:** `index.html` no navegador ou GitHub Pages (branch `main`, pasta raiz). O botão discreto ⛶ no canto superior esquerdo ativa tela cheia quando o navegador permitir. Também é possível usar F11 no computador.
 
-Pressione CONFIRMA para iniciar, digite dois números, confira, use CORRIGE para alterar e CONFIRMA para concluir. Também há suporte a teclado físico e comando de tela cheia.
+## Segurança e uso real
 
-**Não usar em eleições reais:** a interface não tem autenticação de eleitor, gravação dos votos, sigilo verificável nem apuração. Esses componentes exigem backend e testes com a comissão eleitoral.
+**O site ainda não grava votos**. Esta fase valida somente o visual e a interação com a urna. Antes de utilizá-la para uma eleição verdadeira, será necessário implementar cadastro das chapas, autorização individual dos eleitores, prevenção de múltiplos votos, sigilo do voto, armazenamento seguro no servidor, auditoria, apuração e testes. GitHub Pages sozinho não garante essas funções.
+
+A mensagem fixa de "modo demonstração" foi retirada do visual conforme solicitado. A ausência desse aviso **não significa que a urna esteja pronta para receber votos reais**.
