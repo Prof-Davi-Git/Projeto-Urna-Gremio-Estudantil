@@ -1,34 +1,85 @@
-// ATENÇÃO: demonstração visual sem persistência, autenticação nem apuração.
-// As posições são percentuais relativos à imagem original de 1536 x 1024.
-const hotspots = [
-['1',67.8,33.4,6.4,7.0],['2',76.0,33.4,6.5,7.0],['3',84.1,33.4,6.7,7.0],
-['4',67.8,42.5,6.4,7.0],['5',76.0,42.5,6.5,7.0],['6',84.1,42.5,6.7,7.0],
-['7',67.8,51.7,6.4,7.0],['8',76.0,51.7,6.5,7.0],['9',84.1,51.7,6.7,7.0],
-['0',76.0,60.1,6.5,7.0],['BRANCO',65.0,68.1,8.5,9.4],
-['CORRIGE',75.0,68.1,9.1,9.4],['CONFIRMA',85.2,68.1,9.4,9.4]
+// Interação da urna escolar (sem registrar votos nesta etapa).
+// Coordenadas em pixels da ARTE ORIGINAL 1536 x 1024.
+// O CSS recorta a frente da máquina usando estas mesmas dimensões.
+const crop={x:60,y:172,width:1430,height:651};
+const buttons=[
+  ['1',1041,340,99,76],['2',1168,340,99,76],['3',1291,340,99,76],
+  ['4',1041,432,99,76],['5',1168,432,99,76],['6',1291,432,99,76],
+  ['7',1041,524,99,77],['8',1168,524,99,77],['9',1291,524,99,77],
+  ['0',1171,614,101,77],
+  ['BRANCO',999,699,132,101],
+  ['CORRIGE',1153,699,135,101],
+  ['CONFIRMA',1310,699,146,101]
 ];
-const layer=document.getElementById('hotspots'), visor=document.getElementById('visor');
-let state='inicio',code='',selection='';
-for(const [label,x,y,w,h] of hotspots){
- const el=document.createElement('button');el.type='button';el.className='hotspot';
- el.setAttribute('aria-label',label);el.title=label;Object.assign(el.style,{left:x+'%',top:y+'%',width:w+'%',height:h+'%'});
- el.addEventListener('click',()=>press(label));layer.append(el);
+const visor=document.getElementById('visor');
+const keypad=document.getElementById('teclado');
+let phase='welcome',typed='',selected='';
+for(const [label,x,y,w,h] of buttons){
+  const key=document.createElement('button');
+  key.type='button';
+  key.className='hotspot';
+  key.setAttribute('aria-label',label);
+  key.title=label;
+  key.style.left=((x-crop.x)/crop.width*100)+'%';
+  key.style.top=((y-crop.y)/crop.height*100)+'%';
+  key.style.width=(w/crop.width*100)+'%';
+  key.style.height=(h/crop.height*100)+'%';
+  key.addEventListener('click',()=>press(label));
+  keypad.appendChild(key);
 }
-function show(){
- if(state==='inicio'){visor.classList.remove('visible');visor.innerHTML='';return}
- visor.classList.add('visible');
- if(state==='typing')visor.innerHTML='<div><small>VOTAÇÃO DO GRÊMIO ESTUDANTIL</small><h1>Digite o número da chapa</h1><div class="code">'+(code.padEnd(2,'_'))+'</div><p>Use CORRIGE para limpar.</p></div>';
- else if(state==='review')visor.innerHTML='<div><small>CONFIRA SUA ESCOLHA</small><h1>'+(selection==='BRANCO'?'VOTO EM BRANCO':'NÚMERO DA CHAPA')+'</h1><div class="code">'+(selection==='BRANCO'?'BRANCO':selection)+'</div><p>CONFIRMA para concluir a simulação<br>CORRIGE para alterar</p></div>';
- else visor.innerHTML='<div><h1>FIM</h1><p>Simulação concluída.</p><small>Nenhum voto foi gravado. Pressione CORRIGE para reiniciar.</small></div>';
+function render(){
+  if(phase==='welcome'){
+    visor.classList.remove('visible');
+    visor.replaceChildren();
+    return;
+  }
+  visor.classList.add('visible');
+  if(phase==='typing'){
+    visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+(typed.padEnd(2,'_'))+'</div><p class="info">Use as teclas da urna.</p></div>';
+  }else if(phase==='review'){
+    visor.innerHTML=selected==='BRANCO'
+      ?'<div><p class="subtitle">CONFIRA SUA ESCOLHA</p><h1>VOTO EM BRANCO</h1><p class="info">CONFIRMA para concluir.<br>CORRIGE para voltar.</p></div>'
+      :'<div><p class="subtitle">CONFIRA SUA ESCOLHA</p><h1>Número da chapa</h1><div class="digits">'+selected+'</div><p class="info">CONFIRMA para concluir.<br>CORRIGE para alterar.</p></div>';
+  }else{
+    visor.innerHTML='<div><h1>FIM</h1><p class="info">Esta versão ainda não registra votos.</p><p class="subtitle">Pressione CORRIGE para reiniciar.</p></div>';
+  }
 }
-function press(k){
- if(state==='inicio'){if(k==='CONFIRMA'){state='typing';show()}return}
- if(state==='done'){if(k==='CORRIGE'){state='inicio';code='';selection='';show()}return}
- if(k==='CORRIGE'){state='typing';code='';selection='';show();return}
- if(k==='BRANCO'&&state==='typing'){selection='BRANCO';state='review';show();return}
- if(k==='CONFIRMA'){if(state==='typing'&&code.length===2){selection=code;state='review';show()}else if(state==='review'){state='done';show()}return}
- if(/^\d$/.test(k)&&state==='typing'&&code.length<2){code+=k;show()}
+function press(key){
+  if(phase==='welcome'){
+    if(key==='CONFIRMA'){phase='typing';render()}
+    return;
+  }
+  if(phase==='finished'){
+    if(key==='CORRIGE'){phase='welcome';typed='';selected='';render()}
+    return;
+  }
+  if(key==='CORRIGE'){
+    typed='';selected='';phase='typing';render();return;
+  }
+  if(key==='BRANCO'&&phase==='typing'){
+    selected='BRANCO';phase='review';render();return;
+  }
+  if(key==='CONFIRMA'){
+    if(phase==='typing'&&typed.length===2){selected=typed;phase='review';render()}
+    else if(phase==='review'){phase='finished';render()}
+    return;
+  }
+  if(/^\d$/.test(key)&&phase==='typing'&&typed.length<2){
+    typed+=key;render();
+  }
 }
-document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat)return;if(/^\d$/.test(e.key)){e.preventDefault();press(e.key)}else if(e.key==='Enter'){e.preventDefault();press('CONFIRMA')}else if(e.key==='Backspace'){e.preventDefault();press('CORRIGE')}});
-document.getElementById('full').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{alert('Use F11 para ativar a tela cheia.')}});
-show();
+document.addEventListener('keydown',event=>{
+  if(event.altKey||event.ctrlKey||event.metaKey||event.repeat)return;
+  if(/^\d$/.test(event.key)){event.preventDefault();press(event.key)}
+  else if(event.key==='Enter'){event.preventDefault();press('CONFIRMA')}
+  else if(event.key==='Backspace'){event.preventDefault();press('CORRIGE')}
+});
+document.getElementById('tela-cheia').addEventListener('click',async()=>{
+  try{
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  }catch{
+    alert('Para exibir sem barras do navegador, use F11.');
+  }
+});
+render();
