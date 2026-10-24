@@ -7,9 +7,9 @@ Projeto da E.E. Prof. Armando Gomes de Araújo.
 - `index.html`: estrutura HTML.
 - `style.css`: a urna preenche a tela de forma proporcional e mantém a disposição visual da arte.
 - `script.js`: regiões transparentes clicáveis alinhadas ao teclado da imagem; simulação do voto.
-- `urna.png`: imagem original da urna aprovada, **arquivo binário ainda pendente de envio**.
+- `urna.webp`: imagem aprovada da urna enviada em formato WebP otimizado, mantendo sua composição visual.
 
-**Nota:** a publicação do site exige que `urna.png` esteja na raiz, pois os arquivos de interface não reproduzem a arte por código. Não substituir por recriação aproximada.
+**Nota:** a imagem `urna.webp` já está incluída na raiz do repositório. O site utiliza essa mesma arte; não a substitua por recriações aproximadas, pois os arquivos de interface não reproduzem a arte por código. Não substituir por recriação aproximada.
 
 ## Simulação
 
