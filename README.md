@@ -1,31 +1,18 @@
 # Urna do Grêmio Estudantil
 
-Interface inicial da urna da **E.E. Prof. Armando Gomes de Araújo**.
+Projeto da E.E. Prof. Armando Gomes de Araújo.
 
-## Como abrir
+## Estrutura
 
-Abra `index.html` no navegador ou publique a raiz do repositório pelo GitHub Pages (Settings → Pages → Deploy from a branch → main → /root).
+- `index.html`: estrutura HTML.
+- `style.css`: a urna preenche a tela de forma proporcional e mantém a disposição visual da arte.
+- `script.js`: regiões transparentes clicáveis alinhadas ao teclado da imagem; simulação do voto.
+- `urna.png`: imagem original da urna aprovada, **arquivo binário ainda pendente de envio**.
 
-## Interface criada
+**Nota:** a publicação do site exige que `urna.png` esteja na raiz, pois os arquivos de interface não reproduzem a arte por código. Não substituir por recriação aproximada.
 
-- Formato de urna: visor à esquerda e painel numérico à direita.
-- Layout responsivo que ocupa a tela do navegador.
-- Teclas clicáveis 0–9, **BRANCO**, **CORRIGE**, **CONFIRMA**.
-- Digitação opcional pelo teclado físico, Enter para confirmar e Backspace para corrigir.
-- Botão de tela cheia (o navegador pode exigir permissão).
-- Fluxo **abertura → número de chapa (2 dígitos) → revisão → encerramento da simulação**.
-- Símbolo escolar vetorial **provisório**, inspirado na imagem enviada; substituir pelo arquivo oficial aprovado da escola posteriormente.
+## Simulação
 
-## Importante — ainda não é uma urna de produção
+Pressione CONFIRMA para iniciar, digite dois números, confira, use CORRIGE para alterar e CONFIRMA para concluir. Também há suporte a teclado físico e comando de tela cheia.
 
-**O protótipo não registra, transmite nem totaliza votos e não tem autenticação de eleitores.** A interface apresenta aviso permanente para evitar uso acidental como eleição oficial. O sistema foi feito dessa maneira intencionalmente, até definirmos os requisitos da votação real.
-
-Para uma eleição verdadeira será necessário planejar, implementar e testar:
-1. Cadastro oficial das chapas, com número, nome e identificação visual;
-2. Lista de alunos aptos e liberação individual por mesário;
-3. Proteção contra múltiplos votos com preservação do sigilo, **separando eleitor da escolha**;
-4. Serviço/backend e banco de dados com acesso restrito (GitHub Pages sozinho não oferece isso);
-5. Validação dos votos no servidor, apuração, auditoria e política de retenção de dados;
-6. Plano para falhas de energia/internet, testes prévios com a comissão eleitoral e regras da escola.
-
-Não usar o protótipo para coletar votos válidos antes de implementar e validar esses controles.
+**Não usar em eleições reais:** a interface não tem autenticação de eleitor, gravação dos votos, sigilo verificável nem apuração. Esses componentes exigem backend e testes com a comissão eleitoral.
