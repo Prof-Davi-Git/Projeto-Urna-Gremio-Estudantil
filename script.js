@@ -13,7 +13,7 @@ const buttons=[
 ];
 const visor=document.getElementById('visor');
 const keypad=document.getElementById('teclado');
-let phase='welcome',typed='',selected='';
+let phase='typing',typed='',selected='';
 for(const [label,x,y,w,h] of buttons){
   const key=document.createElement('button');
   key.type='button';
@@ -28,11 +28,6 @@ for(const [label,x,y,w,h] of buttons){
   keypad.appendChild(key);
 }
 function render(){
-  if(phase==='welcome'){
-    visor.classList.remove('visible');
-    visor.replaceChildren();
-    return;
-  }
   visor.classList.add('visible');
   if(phase==='typing'){
     visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+(typed.padEnd(2,'_'))+'</div><p class="info">Use as teclas da urna.</p></div>';
@@ -45,12 +40,8 @@ function render(){
   }
 }
 function press(key){
-  if(phase==='welcome'){
-    if(key==='CONFIRMA'){phase='typing';render()}
-    return;
-  }
   if(phase==='finished'){
-    if(key==='CORRIGE'){phase='welcome';typed='';selected='';render()}
+    if(key==='CORRIGE'){phase='typing';typed='';selected='';render()}
     return;
   }
   if(key==='CORRIGE'){
