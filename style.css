@@ -2,10 +2,12 @@
    Recorte da arte original 1536 x 1024: x=60..1490, y=172..823. */
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;overflow:hidden}
-body{font-family:Arial,Helvetica,sans-serif;background:#dfe6f0}
+body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(145deg,#ecf1f7 0%,#d5dfea 65%,#c8d2df 100%);display:flex;align-items:center;justify-content:center}
 button{font:inherit}
 button:focus-visible{outline:3px solid #facc15;outline-offset:2px}
-.urna{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;isolation:isolate;background:#e3e9f2}
+/* A largura e a altura seguem sempre a MESMA proporção do painel recortado (1430 x 651).
+   O espaço extra do monitor vira borda; a arte e os botões nunca são esticados. */
+.urna{position:relative;width:min(100vw,219.662vh);width:min(100vw,219.662dvh);height:auto;aspect-ratio:1430 / 651;max-height:100vh;max-height:100dvh;flex:0 0 auto;overflow:hidden;isolation:isolate;background:#e3e9f2}
 .arte{position:absolute;display:block;max-width:none;width:107.4126%;height:157.2965%;left:-4.1958%;top:-26.4209%;pointer-events:none;user-select:none}
 .teclado{display:contents}
 .hotspot{position:absolute;z-index:2;border:0;background:transparent;border-radius:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
