@@ -42,6 +42,10 @@ O arquivo contém apenas **totais por chapa (13 e 33), brancos, nulos, total ger
 - Gerar_Relatorio.bat — CSV de apuração para conferência.
 - script.js, index.html, style.css e assets — interface da urna e imagens/áudios.
 
+## Teste antes da votação
+
+Dê dois cliques em **Testar_Urna.bat**. Os testes simulam liberações e gravações em arquivos temporários, sem alterar a apuração verdadeira. O resultado esperado é **OK**. Esse teste automático não substitui um ensaio com mesário, duas ou mais pessoas e a impressora.
+
 ## Avisos para a comissão eleitoral
 
 Esta é uma primeira implementação local, **não uma urna eleitoral certificada ou auditada**. A lista em papel e o mesário ajudam a controlar quem vota, mas não identificam automaticamente alunos repetidos: a comissão precisa fazer essa conferência no papel.
