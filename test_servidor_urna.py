@@ -1,4 +1,6 @@
-"""Testes locais; usam diretório temporário e não alteram votos reais."""
+"""Testes automáticos em arquivos temporários (não usam votos de alunos)."""
+import csv
+import io
 import json
 import tempfile
 import threading
@@ -7,75 +9,92 @@ import uuid
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-
 import servidor_urna as urna
 
 
-class TesteUrna(unittest.TestCase):
+class TesteUrnaSimples(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.old = (urna.PASTA_PRIVADA, urna.ARQUIVO_VOTOS, urna.ARQUIVO_RELATORIO)
-        urna.PASTA_PRIVADA = Path(self.tmp.name)
-        urna.ARQUIVO_VOTOS = urna.PASTA_PRIVADA / "apuracao.json"
-        urna.ARQUIVO_RELATORIO = urna.PASTA_PRIVADA / "relatorio.csv"
-        self.server = urna.ServidorUrna(("127.0.0.1", 0), urna.Rotas)
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.temp = tempfile.TemporaryDirectory()
+        self.antigos = (urna.DADOS, urna.BANCO, urna.HISTORICO, urna.RELATORIO)
+        urna.DADOS = Path(self.temp.name)
+        urna.BANCO = urna.DADOS / "votos.json"
+        urna.HISTORICO = urna.DADOS / "historico.csv"
+        urna.RELATORIO = urna.DADOS / "relatorio.csv"
+        self.servidor = urna.ServidorLocal(("127.0.0.1", 0), urna.Rotas)
+        self.thread = threading.Thread(target=self.servidor.serve_forever, daemon=True)
         self.thread.start()
-        self.url = "http://127.0.0.1:" + str(self.server.server_address[1])
+        self.url = "http://127.0.0.1:" + str(self.servidor.server_address[1])
 
     def tearDown(self):
-        self.server.shutdown()
-        self.server.server_close()
+        self.servidor.shutdown()
+        self.servidor.server_close()
         self.thread.join(timeout=3)
-        (urna.PASTA_PRIVADA, urna.ARQUIVO_VOTOS, urna.ARQUIVO_RELATORIO) = self.old
-        self.tmp.cleanup()
+        (urna.DADOS, urna.BANCO, urna.HISTORICO, urna.RELATORIO) = self.antigos
+        self.temp.cleanup()
 
-    def post(self, caminho, dados):
-        corpo = json.dumps(dados).encode("utf-8")
-        requisicao = Request(self.url + caminho, body=corpo,
-                             headers={"Content-Type": "application/json"}, method="POST")
+    def post(self, escolha, chave):
+        corpo = json.dumps({"escolha": escolha, "identificador": chave}).encode()
+        request = Request(self.url + "/api/voto", data=corpo, method="POST",
+                          headers={"Content-Type": "application/json"})
         try:
-            with urlopen(requisicao, timeout=3) as resposta:
-                return resposta.status, json.load(resposta)
-        except HTTPError as erro:
-            return erro.code, json.load(erro)
+            with urlopen(request, timeout=3) as resp:
+                return resp.status, json.load(resp)
+        except HTTPError as error:
+            return error.code, json.load(error)
 
-    def test_gravacao_bloqueio_e_relatorio_sem_nome(self):
-        with urlopen(self.url + "/api/status", timeout=3) as resposta:
-            self.assertFalse(json.load(resposta)["liberada"])
-        numero = str(uuid.uuid4())
-        self.assertEqual(409, self.post("/api/voto", {"escolha": "13", "identificador": numero})[0])
-        self.assertEqual(403, self.post("/api/liberar", {"pin": "0000000"})[0])
-        self.assertEqual(200, self.post("/api/liberar", {"pin": self.server.estado.pin_mesario})[0])
-        self.assertEqual(200, self.post("/api/voto", {"escolha": "13", "identificador": numero})[0])
-        self.assertEqual(200, self.post("/api/voto", {"escolha": "13", "identificador": numero})[0])
-        self.assertEqual(409, self.post("/api/voto", {"escolha": "33", "identificador": str(uuid.uuid4())})[0])
-        self.assertEqual(200, self.post("/api/liberar", {"pin": self.server.estado.pin_mesario})[0])
-        self.assertEqual(200, self.post("/api/voto", {"escolha": "BRANCO", "identificador": str(uuid.uuid4())})[0])
-        apuracao = urna.ler_dados()
-        self.assertEqual(2, apuracao["total"])
-        self.assertEqual(1, apuracao["chapas"]["13"])
-        self.assertEqual(0, apuracao["chapas"]["33"])
-        self.assertEqual(1, apuracao["brancos"])
-        self.assertEqual(0, apuracao["nulos"])
-        self.assertEqual(2, len(apuracao["confirmacoes_processadas"]))
-        self.assertNotIn("aluno", str(apuracao).lower())
-        urna.criar_relatorio()
-        self.assertTrue(urna.ARQUIVO_RELATORIO.exists())
+    def test_sequencia_sem_mesario_e_repeticao(self):
+        with urlopen(self.url + "/api/status", timeout=3) as response:
+            self.assertTrue(json.load(response)["liberada"])
+        escolhas = ["13", "33", "BRANCO", "NULO"]
+        primeiro_id = str(uuid.uuid4())
+        self.assertEqual(200, self.post("13", primeiro_id)[0])
+        self.assertEqual(200, self.post("13", primeiro_id)[0])
+        for escolha in escolhas[1:]:
+            self.assertEqual(200, self.post(escolha, str(uuid.uuid4()))[0])
+        dados = urna.carregar()
+        self.assertEqual(escolhas, [v["escolha"] for v in dados["votos"]])
+        self.assertEqual(4, len(dados["votos"]))
+        self.assertTrue(urna.HISTORICO.exists())
+        with urna.HISTORICO.open(encoding="utf-8-sig", newline="") as f:
+            registros = list(csv.reader(f, delimiter=";"))
+        self.assertEqual(["1º voto", "13"], registros[1][:2])
+        self.assertEqual(["2º voto", "33"], registros[2][:2])
+        self.assertEqual(["3º voto", "BRANCO"], registros[3][:2])
+        self.assertEqual(["4º voto", "NULO"], registros[4][:2])
+        self.assertEqual(200, self.post("13", str(uuid.uuid4()))[0])
+        self.assertEqual(5, len(urna.carregar()["votos"]))
+        valores = urna.gerar_relatorio()
+        self.assertEqual({"13": 2, "33": 1, "BRANCO": 1, "NULO": 1}, valores)
 
-    def test_voto_invalido_nao_aceito(self):
-        self.assertEqual(200, self.post("/api/liberar", {"pin": self.server.estado.pin_mesario})[0])
-        self.assertEqual(400, self.post("/api/voto", {"escolha": ["13"], "identificador": str(uuid.uuid4())})[0])
-        self.assertEqual(400, self.post("/api/voto", {"escolha": "13", "identificador": "123"})[0])
-        self.assertEqual(0, urna.ler_dados()["total"])
+    def test_bloqueia_dados_invalidos_e_arquivos_locais(self):
+        self.assertEqual(400, self.post("14", str(uuid.uuid4()))[0])
+        self.assertEqual(400, self.post("13", "invalido")[0])
+        self.assertEqual(0, len(urna.carregar()["votos"]))
         with self.assertRaises(HTTPError) as ctx:
             urlopen(self.url + "/servidor_urna.py", timeout=3)
         self.assertEqual(403, ctx.exception.code)
 
-    def test_recuperacao_contra_arquivo_corrompido(self):
-        urna.ARQUIVO_VOTOS.write_text('{"versao":1,"total":99}', encoding="utf-8")
+    def test_totais_antigos_preservados(self):
+        legado = {
+            "versao": 1, "total": 2,
+            "chapas": {"13": 1, "33": 1},
+            "brancos": 0, "nulos": 0,
+            "confirmacoes_processadas": [str(uuid.uuid4()), str(uuid.uuid4())]
+        }
+        (urna.DADOS / "apuracao_privada.json").write_text(
+            json.dumps(legado), encoding="utf-8"
+        )
+        self.assertEqual(2, sum(urna.totais(urna.carregar()).values()))
+        self.assertEqual(200, self.post("BRANCO", str(uuid.uuid4()))[0])
+        with urna.HISTORICO.open(encoding="utf-8-sig", newline="") as f:
+            registros = list(csv.reader(f, delimiter=";"))
+        self.assertEqual("3º voto", registros[1][0])
+        self.assertEqual(3, sum(urna.totais(urna.carregar()).values()))
+
+    def test_arquivo_invalido_nao_e_zerado(self):
+        urna.BANCO.write_text('{"versao":2,"anteriores": {}}', encoding="utf-8")
         with self.assertRaises(ValueError):
-            urna.ler_dados()
+            urna.carregar()
 
 
 if __name__ == "__main__":
