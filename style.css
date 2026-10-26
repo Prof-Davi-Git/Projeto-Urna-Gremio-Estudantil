@@ -79,3 +79,6 @@ button:focus-visible{outline:3px solid #facc15;outline-offset:2px}
  .chapa-instructions{font-size:clamp(10px,2.8vmin,16px)!important}
  .chapa-media{gap:4px}
 }
+
+/* Encerramento: somente FIM, com leitura facilitada à distância. */
+.visor .fim-titulo{font-size:clamp(64px,12vmin,165px);font-weight:900;line-height:1;letter-spacing:.08em;margin:0;color:#112c56}
