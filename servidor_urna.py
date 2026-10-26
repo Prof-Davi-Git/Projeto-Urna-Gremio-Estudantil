@@ -242,7 +242,7 @@ def iniciar(porta):
     servidor = ServidorUrna(("127.0.0.1", porta), Rotas)
     endereco = f"http://127.0.0.1:{porta}"
     print("\n" + "=" * 60)
-    print("URNA DO GRÊMIO - SERVIDOR LOCAL")
+    print("URNA DO GRÊMIO - SERVIDOR LOCAL" + (" [MODO TESTE]" if PASTA_PRIVADA.name.endswith("_TESTE") else " [ELEIÇÃO]"))
     print("Não fecha esta janela enquanto estiver votando.")
     print("Urna:", endereco)
     print("Mesário:", endereco + "/mesario.html")
@@ -261,10 +261,16 @@ def iniciar(porta):
 
 
 def main():
+    global PASTA_PRIVADA, ARQUIVO_VOTOS, ARQUIVO_RELATORIO
     parser = argparse.ArgumentParser(description="Urna local do Grêmio Estudantil")
     parser.add_argument("--porta", type=int, default=8765, help="Padrão: 8765")
     parser.add_argument("--relatorio", action="store_true", help="Gerar relatório após encerrar a votação")
+    parser.add_argument("--teste", action="store_true", help="Ensaiar em outra pasta sem alterar votos oficiais")
     args = parser.parse_args()
+    if args.teste:
+        PASTA_PRIVADA = PASTA_PROJETO.parent / "Urna_Gremio_Dados_TESTE"
+        ARQUIVO_VOTOS = PASTA_PRIVADA / "apuracao_teste.json"
+        ARQUIVO_RELATORIO = PASTA_PRIVADA / "relatorio_teste.csv"
     if args.relatorio:
         dados = criar_relatorio()
         print("Relatório gerado:", ARQUIVO_RELATORIO)
