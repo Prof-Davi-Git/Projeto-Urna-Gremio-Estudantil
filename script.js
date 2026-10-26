@@ -13,7 +13,55 @@ const buttons=[
 ];
 const visor=document.getElementById('visor');
 const keypad=document.getElementById('teclado');
+const somTecla=new Audio('assets/bip-scanner.mp3');
+const somFim=new Audio('assets/fim-som-da-urna.mp3');
+somTecla.preload='auto';
+somFim.preload='auto';
 let phase='typing',typed='',selected='';
+let temporizadorRetorno=null;
+let temporizadorSeguranca=null;
+
+function tocarSomTecla(){
+  try{
+    somTecla.pause();
+    somTecla.currentTime=0;
+    const execucao=somTecla.play();
+    if(execucao&&typeof execucao.catch==='function')execucao.catch(()=>{});
+  }catch{
+    // Falha de áudio não deve impedir a votação na interface.
+  }
+}
+function reiniciarUrna(){
+  clearTimeout(temporizadorRetorno);
+  clearTimeout(temporizadorSeguranca);
+  temporizadorRetorno=null;
+  temporizadorSeguranca=null;
+  phase='typing';
+  typed='';
+  selected='';
+  render();
+}
+function agendarReinicio(espera=1400){
+  if(phase!=='finished'||temporizadorRetorno!==null)return;
+  clearTimeout(temporizadorSeguranca);
+  temporizadorRetorno=setTimeout(reiniciarUrna,espera);
+}
+somFim.addEventListener('ended',()=>agendarReinicio(1400));
+function finalizarVotacao(){
+  phase='finished';
+  render();
+  // Enquanto FIM estiver na tela, nenhuma tecla pode iniciar outro voto.
+  try{
+    somFim.pause();
+    somFim.currentTime=0;
+    const execucao=somFim.play();
+    if(execucao&&typeof execucao.catch==='function')execucao.catch(()=>agendarReinicio(1800));
+  }catch{
+    agendarReinicio(1800);
+  }
+  // Segurança caso o navegador não dispare o evento ended.
+  temporizadorSeguranca=setTimeout(()=>agendarReinicio(0),6000);
+}
 for(const [label,x,y,w,h] of buttons){
   const key=document.createElement('button');
   key.type='button';
@@ -65,28 +113,43 @@ function render(){
   }else if(phase==='review'){
     visor.innerHTML='<div><p class="subtitle">NÚMERO NÃO CADASTRADO</p><div class="digits">'+selected+'</div><h1>VOTO NULO</h1><p class="info">CONFIRMA para concluir.<br>CORRIGE para alterar.</p></div>';
   }else{
-    visor.innerHTML='<div><h1>FIM</h1><p class="info">Esta versão ainda não registra votos.</p><p class="subtitle">Pressione CORRIGE para reiniciar.</p></div>';
+    visor.innerHTML='<div><h1 class="fim-titulo">FIM</h1></div>';
   }
 }
 function press(key){
-  if(phase==='finished'){
-    if(key==='CORRIGE'){phase='typing';typed='';selected='';render()}
-    return;
-  }
+  if(phase==='finished')return;
   if(key==='CORRIGE'){
-    typed='';selected='';phase='typing';render();return;
+    tocarSomTecla();
+    typed='';
+    selected='';
+    phase='typing';
+    render();
+    return;
   }
   if(key==='BRANCO'&&phase==='typing'){
-    selected='BRANCO';phase='review';render();return;
-  }
-  if(key==='CONFIRMA'){
-    if(phase==='typing'&&typed.length===2){selected=typed;phase='review';render()}
-    else if(phase==='review'){phase='finished';render()}
+    tocarSomTecla();
+    selected='BRANCO';
+    phase='review';
+    render();
     return;
   }
-  if(/^\d$/.test(key)&&phase==='typing'&&typed.length<2){
+  if(key==='CONFIRMA'){
+    if(phase==='review'){
+      finalizarVotacao();
+    }else if(phase==='typing'&&typed.length===2){
+      selected=typed;
+      phase='review';
+      render();
+    }
+    return;
+  }
+  if(/^\\d$/.test(key)&&phase==='typing'&&typed.length<2){
+    tocarSomTecla();
     typed+=key;
-    if(typed.length===2){selected=typed;phase='review';}
+    if(typed.length===2){
+      selected=typed;
+      phase='review';
+    }
     render();
   }
 }
