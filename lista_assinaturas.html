@@ -29,14 +29,14 @@
 </head>
 <body>
 <button class="botao" onclick="window.print()">Imprimir folha(s) de assinaturas</button>
-<p class="explanation">Quatro folhas numeradas (1 a 100). Imprima as necessárias. Nesta lista <strong>não se escreve o número da chapa escolhida</strong>.</p>
+<p class="explanation">Quatro folhas numeradas (1 a 100). Imprima as necessárias. Nesta lista o aluno assina antes de votar. <strong>A lista, cruzada com o arquivo de votos em ordem, permite saber a escolha de cada aluno.</strong> Guarde os dois documentos com acesso restrito.</p>
 <div id="paginas"></div>
 <script>
 const raiz=document.getElementById('paginas');
 for(let pagina=0;pagina<4;pagina++){
  const folha=document.createElement('section');
  folha.className='page';
- folha.innerHTML='<h1>GRÊMIO ESTUDANTIL — REGISTRO DE PRESENÇA</h1><p class="linha">E.E. Prof. Armando Gomes de Araújo &nbsp;&nbsp; Data: ____/____/________ &nbsp;&nbsp; Folha '+(pagina+1)+'/4</p><table><thead><tr><th class="numero">Ordem</th><th class="assinatura">Assinatura do estudante</th><th class="turma">Turma (opcional)</th></tr></thead><tbody></tbody></table><p class="rodape">O número identifica a ordem de atendimento, NÃO a escolha do eleitor. A apuração digital contém apenas totais por chapa, branco e nulo.</p>';
+ folha.innerHTML='<h1>GRÊMIO ESTUDANTIL — REGISTRO DE PRESENÇA</h1><p class="linha">E.E. Prof. Armando Gomes de Araújo &nbsp;&nbsp; Data: ____/____/________ &nbsp;&nbsp; Folha '+(pagina+1)+'/4</p><table><thead><tr><th class="numero">Ordem</th><th class="assinatura">Assinatura do estudante</th><th class="turma">Turma (opcional)</th></tr></thead><tbody></tbody></table><p class="rodape">Registro de atendimento. Ao relacionar esta ordem ao histórico digital, é possível identificar as escolhas. Acesso restrito à comissão.</p>';
  const tbody=folha.querySelector('tbody');
  for(let n=pagina*25+1;n<=pagina*25+25;n++){
    const row=document.createElement('tr');
