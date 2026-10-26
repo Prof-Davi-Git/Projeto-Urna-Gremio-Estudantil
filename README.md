@@ -1,30 +1,51 @@
-# Urna do Grêmio Estudantil
+# Urna do Grêmio Estudantil — E.E. Prof. Armando Gomes de Araújo
 
-Interface visual da E.E. Prof. Armando Gomes de Araújo.
+Urna das chapas **13 — Menos Bullying mais Inclusão** e **33 — Ao Infinito e Além**.
 
-## Primeira versão — painel frontal em tela inteira
+## Como usar no único computador da eleição
 
-A tela do computador **é o painel da urna**. A arte `urna.webp` aparece recortada para remover o topo, a base e as laterais da caixa física. O painel do visor, os botões numéricos, BRANCO, CORRIGE, CONFIRMA e os logotipos permanecem no visual original, com os botões clicáveis no navegador.
+**Requer Python 3. Não precisa instalar MySQL nem cadastrar alunos.**
 
-O projeto foi organizado em:
-- `index.html`: estrutura da interface;
-- `style.css`: enquadramento do painel frontal para ocupar 100% da janela;
-- `script.js`: teclas clicáveis, teclado físico e navegação;
-- `urna.webp`: imagem-base aprovada pelo professor.
+1. Na pasta do projeto, abra **Iniciar_Urna.bat** com dois cliques. Não feche a janela preta durante a votação.
+2. O programa abre o **Controle do Mesário** e a **Urna**. A janela preta mostrará um PIN de seis dígitos, exclusivo do mesário.
+3. Antes de cada votação, o aluno assina na lista em papel. Use o link de impressão na tela do mesário.
+4. O mesário confere a assinatura e usa o PIN para clicar **LIBERAR UM VOTO**.
+5. O eleitor digita 13 ou 33, escolhe BRANCO, ou digita número não cadastrado para nulo. CONFIRMA registra a escolha.
+6. Só depois de o registro ter sido gravado o som final toca e aparece **FIM**. A urna volta a ficar bloqueada e aguarda o próximo eleitor.
+7. Se aparecer **VOTO NÃO CONFIRMADO**, não reinicie a página: chame o mesário e aperte CONFIRMA novamente. A mesma requisição não será contada duas vezes.
 
-**Como abrir:** `index.html` no navegador ou GitHub Pages (branch `main`, pasta raiz). O botão discreto ⛶ no canto superior esquerdo ativa tela cheia quando o navegador permitir. Também é possível usar F11 no computador.
+**Importante:** não utilize o Live Server do VS Code nem o GitHub Pages para uma votação real. Eles não conseguem gravar votos. Use o endereço http://127.0.0.1:8765 aberto pelo programa acima. O servidor só aceita conexões do próprio computador.
 
+## Armazenamento sem banco de dados
 
-## Sons e fim da votação
+O sistema cria automaticamente uma pasta privada CHAMADA Urna_Gremio_Dados_Privados **ao lado da pasta do repositório**, nunca dentro do GitHub. Nela fica o arquivo apuracao_privada.json.
 
-- As teclas numéricas, **BRANCO** e **CORRIGE** tocam `assets/bip-scanner.mp3`.
-- **CONFIRMA**, ao encerrar uma escolha, toca `assets/fim-som-da-urna.mp3`.
-- Ao confirmar, o visor mostra apenas **FIM**; depois que o som termina e ocorre uma breve pausa, a tela volta automaticamente à digitação da chapa.
-- Enquanto a tela mostra **FIM**, todas as teclas ficam inativas. Se o som não puder ser reproduzido, há um temporizador de segurança para restaurar a interface.
-- As faixas são versões compactadas dos arquivos enviados para carregar rapidamente. O som poderá depender das permissões de áudio e do volume do navegador e do computador.
+O arquivo contém apenas **totais por chapa (13 e 33), brancos, nulos, total geral**, e identificadores aleatórios de confirmação. Esses IDs não registram escolha, nome, matrícula, turma ou ordem de chegada.
 
-## Segurança e uso real
+**A lista de assinaturas é separada do voto.** Não será criado relatório do tipo '1º aluno assinou → votou 13'. Isso quebraria o sigilo eleitoral.
 
-**O site ainda não grava votos**. Esta fase valida somente o visual e a interação com a urna. Antes de utilizá-la para uma eleição verdadeira, será necessário implementar cadastro das chapas, autorização individual dos eleitores, prevenção de múltiplos votos, sigilo do voto, armazenamento seguro no servidor, auditoria, apuração e testes. GitHub Pages sozinho não garante essas funções.
+## Como gerar o relatório depois da eleição
 
-A mensagem fixa de "modo demonstração" foi retirada do visual conforme solicitado. A ausência desse aviso **não significa que a urna esteja pronta para receber votos reais**.
+1. Encerre a votação; na janela do servidor, use Ctrl+C.
+2. Dê dois cliques em **Gerar_Relatorio.bat**.
+3. Abra o arquivo relatorio_apuracao.csv na pasta Urna_Gremio_Dados_Privados (ao lado do repositório).
+4. Compare o **TOTAL DE VOTOS** com a quantidade de assinaturas em papel. Registre qualquer diferença.
+
+**Não apague a pasta de dados.** Os votos não são enviados ao GitHub nem à nuvem. Faça uma cópia de segurança protegida após encerrar a eleição.
+
+## Arquivos do sistema
+
+- servidor_urna.py — serviço Python local e gravação atômica da apuração.
+- Iniciar_Urna.bat — inicializador Windows com dois cliques.
+- mesario.html e mesario.js — liberação por PIN de um voto por vez.
+- lista_assinaturas.html — folhas numeradas prontas para impressão.
+- Gerar_Relatorio.bat — CSV de apuração para conferência.
+- script.js, index.html, style.css e assets — interface da urna e imagens/áudios.
+
+## Avisos para a comissão eleitoral
+
+Esta é uma primeira implementação local, **não uma urna eleitoral certificada ou auditada**. A lista em papel e o mesário ajudam a controlar quem vota, mas não identificam automaticamente alunos repetidos: a comissão precisa fazer essa conferência no papel.
+
+Um administrador com acesso aos arquivos enquanto a votação acontece poderia comparar totais sucessivos e inferir votos individuais. Restrinja o acesso aos arquivos privados e só faça a apuração depois de encerrar.
+
+Antes da eleição real, teste votos válidos, branco, nulo, CORRIGE, som final, bloqueio entre eleitores, queda de energia e perda de conexão. Planeje como separar votos de teste dos votos oficiais com a comissão.
