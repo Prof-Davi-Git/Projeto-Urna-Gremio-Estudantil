@@ -75,7 +75,7 @@ function salvarVoto(escolha){
     throw new Error('O histórico local está inválido. Não foi adicionado nenhum voto.');
   }
   const numero=votos.length+1;
-  votos.push({ordem:numero,escolha,registradoEm:new Date().toISOString()});
+  votos.push({ordem:numero,escolha});
   localStorage.setItem(CHAVE_VOTOS,JSON.stringify(votos));
 }
 function registrarVoto(){
