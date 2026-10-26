@@ -34,6 +34,12 @@ const chapas=Object.freeze({
     nome:'Menos Bullying mais Inclusão',
     logo:'assets/chapa-13-logo-hd.avif',
     equipe:'assets/chapa-13-integrantes-hd.avif'
+  },
+  '33':{
+    numero:'33',
+    nome:'Ao Infinito e Além',
+    logo:'assets/chapa-33-logo-hd.avif',
+    equipe:'assets/chapa-33-integrantes-hd.avif'
   }
 });
 function render(){
