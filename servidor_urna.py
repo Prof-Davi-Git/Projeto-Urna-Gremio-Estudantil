@@ -126,7 +126,7 @@ def gerar_historico(dados):
     if offset:
         escritor.writerow(["Votos da versão anterior (sem sequência)", offset,
                            "Foram preservados nos totais, sem associação individual"])
-    salvar_texto_atomico(HISTORICO, conteudo.getvalue().lstrip("\ufeff"))
+    salvar_texto_atomico(HISTORICO, "\ufeff" + conteudo.getvalue())
 
 
 def gerar_relatorio():
