@@ -25,13 +25,57 @@ button:focus-visible{outline:3px solid #facc15;outline-offset:2px}
 :fullscreen .tela-cheia{display:none}
 @media(max-width:650px){.visor{padding:1.5%}.visor h1{font-size:clamp(12px,3.7vmin,25px)}.visor .subtitle,.visor .info{font-size:clamp(9px,2.5vmin,15px)}.visor .digits{font-size:clamp(25px,9vmin,56px)}}
 
-/* Tela de conferência de chapa: logotipo e fotografia sem distorcer */
-.chapa-view{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(3px,.9vmin,12px);min-height:0}
-.chapa-heading{flex:none;min-width:0;max-width:100%}
-.chapa-numero{font-size:clamp(12px,2.25vmin,28px)!important;font-weight:850;letter-spacing:.07em;color:#263c5e;margin:0}
-.visor .chapa-heading h1{font-size:clamp(17px,3.4vmin,43px);line-height:1.12;margin:.1em auto .15em;max-width:100%}
-.chapa-media{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr);gap:clamp(5px,1vw,14px);align-items:stretch;justify-items:stretch}
-.chapa-figure{width:100%;height:100%;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.chapa-figure img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;image-rendering:auto;border-radius:clamp(2px,.65vmin,8px)}
-.chapa-instructions{flex:none;margin:0!important;font-size:clamp(10px,1.9vmin,23px)!important;font-weight:700;color:#344b69}
-@media(max-width:650px){.visor .chapa-heading h1{font-size:clamp(11px,2.8vmin,18px)}.chapa-numero{font-size:10px!important}.chapa-instructions{font-size:8px!important}.chapa-media{gap:4px}}
+/* Tela de conferência - chapa 13. Ambos os quadros usam exatamente
+   o mesmo espaço; a fotografia tem recorte CSS, sem alterar a imagem-fonte. */
+.chapa-view{
+ width:100%;height:100%;min-height:0;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:clamp(6px,1.1vmin,16px)
+}
+.chapa-heading{flex:0 0 auto;width:100%;min-width:0;text-align:center}
+.chapa-numero{
+ margin:0!important;line-height:1.08;
+ font-size:clamp(20px,3.8vmin,48px)!important;
+ font-weight:900;letter-spacing:.055em;color:#183765
+}
+.visor .chapa-heading h1{
+ margin:.12em 0 .14em;
+ font-size:clamp(25px,5.1vmin,66px);
+ font-weight:900;line-height:1.07;
+ color:#0b2854;text-wrap:balance
+}
+.chapa-media{
+ flex:1 1 auto;min-height:0;width:100%;
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-rows:minmax(0,1fr);gap:clamp(7px,1.1vw,20px);
+ align-items:stretch;justify-items:stretch;overflow:hidden
+}
+.chapa-figure{
+ width:100%;height:100%;min-width:0;min-height:0;
+ overflow:hidden;display:flex;align-items:center;justify-content:center;
+ border-radius:clamp(5px,.75vmin,12px);
+ background:#072b5b;box-shadow:0 2px 8px #10274523
+}
+.chapa-figure img{
+ display:block;width:100%;height:100%;max-width:none;max-height:none;
+ border-radius:inherit;object-fit:cover;image-rendering:auto
+}
+/* O escudo permanece inteiro, sem corte nas bordas. */
+.chapa-figure:first-child img{
+ object-fit:contain;object-position:center;background:#072b5b
+}
+/* O retrato ocupa o mesmo quadro do escudo, com recorte central
+   priorizando os rostos dos integrantes. */
+.chapa-figure:nth-child(2) img{object-fit:cover;object-position:center 33%}
+.chapa-instructions{
+ flex:0 0 auto;max-width:100%;margin:0!important;
+ font-size:clamp(16px,2.9vmin,37px)!important;
+ font-weight:900;line-height:1.2;text-align:center;color:#153a6d;
+ text-wrap:balance
+}
+@media(max-width:650px){
+ .visor .chapa-heading h1{font-size:clamp(12px,4vmin,24px)}
+ .chapa-numero{font-size:clamp(11px,3vmin,17px)!important}
+ .chapa-instructions{font-size:clamp(10px,2.8vmin,16px)!important}
+ .chapa-media{gap:4px}
+}
