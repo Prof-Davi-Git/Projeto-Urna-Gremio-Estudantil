@@ -8,7 +8,6 @@ Execute com: py -3 servidor_urna.py (Windows) ou python3 servidor_urna.py.
 """
 import argparse
 import csv
-import io
 import json
 import os
 import secrets
@@ -17,7 +16,6 @@ import tempfile
 import threading
 import uuid
 import webbrowser
-from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -192,7 +190,7 @@ class Rotas(SimpleHTTPRequestHandler):
 
             escolha = dados.get("escolha")
             identificador = dados.get("identificador")
-            if escolha not in CATEGORIAS:
+            if not isinstance(escolha, str) or escolha not in CATEGORIAS:
                 self.responder(400, {"erro": "Escolha inválida"})
                 return
             try:
