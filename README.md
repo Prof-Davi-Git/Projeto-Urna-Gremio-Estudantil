@@ -43,6 +43,8 @@ Imprima a lista abrindo **http://127.0.0.1:8765/lista_assinaturas.html** quando 
 
 **ATENÇÃO AO SIGILO:** a ordem das assinaturas, quando cruzada com `historico_votos.csv`, **permite identificar a chapa de cada estudante**. Isso é especialmente sensível por se tratar de alunos. Explique o procedimento à comissão eleitoral, mantenha os registros separados e restritos, e informe os estudantes de que a votação não é secreta nesse formato. Para voto secreto, use apenas totais por chapa, sem o histórico de escolhas em ordem.
 
+**Arquivos necessários:** `Iniciar_Teste.bat` (ensaio), `Iniciar_Urna.bat` (votação oficial), `Abrir_Votos.bat` (abrir os registros), `Gerar_Relatorio.bat` (total final) e os arquivos internos do site e servidor. Os antigos arquivos do mesário, testes automatizados e imagens de baixa resolução foram excluídos.
+
 ## Arquivos principais
 
 - `Iniciar_Teste.bat` — inicia o modo de ensaio (porta 8766, arquivos separados).
@@ -50,7 +52,6 @@ Imprima a lista abrindo **http://127.0.0.1:8765/lista_assinaturas.html** quando 
 - `servidor_urna.py` — salva a sequência e gera os arquivos, sem banco externo.
 - `Gerar_Relatorio.bat` — gera a soma final por chapa.
 - `lista_assinaturas.html` — lista numerada imprimível.
-- `test_servidor_urna.py` e `Testar_Urna.bat` — testes automáticos opcionais.
 
 Se o programa mostrar **VOTO NÃO CONFIRMADO**, não feche a página. Aperte CONFIRMA novamente; o sistema usa um identificador único para não somar a mesma confirmação duas vezes.
 
