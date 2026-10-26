@@ -37,6 +37,12 @@ Para gerar a **contagem total por chapa**, depois de encerrar a votação execut
 
 **Não apague a pasta de dados nem a substitua durante a eleição.** O arquivo `votos_privados.json` é a fonte para reconstruir o histórico se necessário. Após a eleição, faça uma cópia de segurança dos arquivos privados e restrinja o acesso.
 
+## Se o botão CONFIRMA não finalizar o voto
+
+Se o código foi atualizado com a janela preta antiga ainda aberta, o navegador novo pode falar com o servidor Python anterior. **Feche a janela preta antiga (Ctrl+C), atualize o projeto pelo GitHub Desktop (Pull origin), abra Iniciar_Teste.bat de novo e atualize a página da urna com Ctrl+Shift+R.** A votação de teste deve estar em `http://127.0.0.1:8766/`; a oficial, em `http://127.0.0.1:8765/`.
+
+A urna agora identifica o servidor incompatível: mostrará **REINICIE O SERVIDOR** em vez de permitir um voto que não será gravado. Se aparecer **VOTO NÃO CONFIRMADO**, a tela exibe o motivo. O sistema só toca o som final e mostra **FIM** depois que o arquivo de dados principal foi salvo corretamente. Não abra o CSV de histórico no Excel durante a votação; um arquivo aberto pode impedir sua atualização, mesmo que o voto permaneça salvo no JSON principal.
+
 ## Lista de assinaturas
 
 Imprima a lista abrindo **http://127.0.0.1:8765/lista_assinaturas.html** quando estiver na urna oficial (ou porta **8766** durante o teste).
