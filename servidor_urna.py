@@ -172,7 +172,7 @@ class Rotas(SimpleHTTPRequestHandler):
     def do_GET(self):
         caminho = urlsplit(self.path).path
         if caminho == "/api/status":
-            self.responder(200, {"servidor_local": True, "liberada": True})
+            self.responder(200, {"servidor_local": True, "liberada": True, "versao_api": 2})
             return
         if caminho.startswith("/api/"):
             self.responder(404, {"erro": "Página não encontrada"})
@@ -217,29 +217,45 @@ class Rotas(SimpleHTTPRequestHandler):
         with TRAVA:
             try:
                 dados = carregar()
-                if identificador in dados["ids_antigos"] or any(
-                        v["id"] == identificador for v in dados["votos"]):
-                    # Pode ter sido registrado antes de o navegador receber a resposta.
-                    gerar_historico(dados)
-                    self.responder(200, {"ok": True})
-                    return
-                dados["votos"].append({"id": identificador, "escolha": escolha})
-                salvar(dados)
-                gerar_historico(dados)
+                repetido = identificador in dados["ids_antigos"] or any(
+                    v["id"] == identificador for v in dados["votos"])
+                if not repetido:
+                    dados["votos"].append({"id": identificador, "escolha": escolha})
+                    # O JSON é a fonte definitiva. Só responde sucesso depois de gravar.
+                    salvar(dados)
             except (OSError, ValueError, KeyError) as erro:
                 print("ERRO AO SALVAR VOTO:", erro, file=sys.stderr)
                 self.responder(500, {
                     "erro": "Não foi possível confirmar o salvamento. Tente CONFIRMA novamente."
                 })
                 return
+            # O CSV é um relatório derivado: se estiver aberto no Excel e o Windows
+            # impedir sua atualização, o voto já gravado NÃO pode parecer perdido.
+            # Fechando o Excel, basta reiniciar a urna ou gerar o relatório novamente.
+            try:
+                gerar_historico(dados)
+            except OSError as erro:
+                print("AVISO: voto salvo, mas CSV ocupado/indisponível:", erro,
+                      file=sys.stderr)
         self.responder(200, {"ok": True})
 
 
 def iniciar(porta):
     with TRAVA:
         dados = carregar()
-        gerar_historico(dados)
-    servidor = ServidorLocal(("127.0.0.1", porta), Rotas)
+        try:
+            gerar_historico(dados)
+        except OSError as erro:
+            print("AVISO: histórico CSV ocupado. Os votos permanecem no JSON:", erro,
+                  file=sys.stderr)
+    try:
+        servidor = ServidorLocal(("127.0.0.1", porta), Rotas)
+    except OSError as erro:
+        print("\nNÃO FOI POSSÍVEL ABRIR A URNA.")
+        print("É possível que outra janela preta da urna ainda esteja aberta.")
+        print("Feche a janela anterior e abra Iniciar_Teste.bat novamente.")
+        print("Detalhes:", erro)
+        return
     endereco = f"http://127.0.0.1:{porta}/"
     print("\n" + "=" * 55)
     print("URNA DO GRÊMIO - " + ("TESTE" if DADOS.name.endswith("_TESTE") else "ELEIÇÃO"))
