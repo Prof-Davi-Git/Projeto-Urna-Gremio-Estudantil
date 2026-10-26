@@ -27,14 +27,37 @@ for(const [label,x,y,w,h] of buttons){
   key.addEventListener('click',()=>press(label));
   keypad.appendChild(key);
 }
+// As imagens são arquivos locais do repositório, não endereços externos.
+const chapas=Object.freeze({
+  '13':{
+    numero:'13',
+    nome:'Menos Bullying mais Inclusão',
+    logo:'assets/chapa-13-logo.webp',
+    equipe:'assets/chapa-13-integrantes.webp'
+  }
+});
 function render(){
   visor.classList.add('visible');
   if(phase==='typing'){
-    visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+(typed.padEnd(2,'_'))+'</div><p class="info">Use as teclas da urna.</p></div>';
+    visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+typed.padEnd(2,'_')+'</div><p class="info">Use as teclas da urna.</p></div>';
+  }else if(phase==='review'&&selected==='BRANCO'){
+    visor.innerHTML='<div><p class="subtitle">CONFIRA SUA ESCOLHA</p><h1>VOTO EM BRANCO</h1><p class="info">CONFIRMA para concluir.<br>CORRIGE para voltar.</p></div>';
+  }else if(phase==='review'&&chapas[selected]){
+    const chapa=chapas[selected];
+    // Todos os campos vêm da lista de chapas cadastradas, nunca do texto digitado pelo eleitor.
+    visor.innerHTML=`<div class="chapa-view">
+      <div class="chapa-heading">
+        <p class="chapa-numero">CHAPA ${chapa.numero}</p>
+        <h1>${chapa.nome}</h1>
+      </div>
+      <div class="chapa-media">
+        <div class="chapa-figure"><img src="${chapa.logo}" alt="Logotipo da chapa ${chapa.nome}" loading="eager"></div>
+        <div class="chapa-figure"><img src="${chapa.equipe}" alt="Foto dos integrantes da chapa ${chapa.nome}" loading="eager"></div>
+      </div>
+      <p class="chapa-instructions">CONFIRMA para concluir · CORRIGE para alterar</p>
+    </div>`;
   }else if(phase==='review'){
-    visor.innerHTML=selected==='BRANCO'
-      ?'<div><p class="subtitle">CONFIRA SUA ESCOLHA</p><h1>VOTO EM BRANCO</h1><p class="info">CONFIRMA para concluir.<br>CORRIGE para voltar.</p></div>'
-      :'<div><p class="subtitle">CONFIRA SUA ESCOLHA</p><h1>Número da chapa</h1><div class="digits">'+selected+'</div><p class="info">CONFIRMA para concluir.<br>CORRIGE para alterar.</p></div>';
+    visor.innerHTML='<div><p class="subtitle">NÚMERO NÃO CADASTRADO</p><div class="digits">'+selected+'</div><h1>VOTO NULO</h1><p class="info">CONFIRMA para concluir.<br>CORRIGE para alterar.</p></div>';
   }else{
     visor.innerHTML='<div><h1>FIM</h1><p class="info">Esta versão ainda não registra votos.</p><p class="subtitle">Pressione CORRIGE para reiniciar.</p></div>';
   }
@@ -56,7 +79,9 @@ function press(key){
     return;
   }
   if(/^\d$/.test(key)&&phase==='typing'&&typed.length<2){
-    typed+=key;render();
+    typed+=key;
+    if(typed.length===2){selected=typed;phase='review';}
+    render();
   }
 }
 document.addEventListener('keydown',event=>{
