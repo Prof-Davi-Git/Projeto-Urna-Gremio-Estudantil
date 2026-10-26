@@ -32,8 +32,8 @@ const chapas=Object.freeze({
   '13':{
     numero:'13',
     nome:'Menos Bullying mais Inclusão',
-    logo:'assets/chapa-13-logo.avif',
-    equipe:'assets/chapa-13-integrantes.avif'
+    logo:'assets/chapa-13-logo-hd.avif',
+    equipe:'assets/chapa-13-integrantes-hd.avif'
   }
 });
 function render(){
