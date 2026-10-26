@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Área do mesário | Urna do Grêmio</title>
+  <style>
+    :root{font-family:Arial,Helvetica,sans-serif;color:#172b46;background:#eef3f8}
+    *{box-sizing:border-box}
+    body{min-height:100vh;margin:0;display:grid;place-items:center;padding:20px}
+    main{width:min(520px,100%);background:#fff;border-radius:18px;padding:32px;box-shadow:0 12px 44px #122d4b1b}
+    h1{font-size:28px;margin:0 0 10px}p{line-height:1.5}
+    label{display:block;font-weight:bold;margin:20px 0 9px}
+    input{font-size:23px;padding:13px 16px;width:100%;border:2px solid #a9bbd2;border-radius:10px;letter-spacing:.15em}
+    button{border:0;border-radius:10px;padding:15px 16px;background:#164878;color:white;font-weight:800;font-size:17px;cursor:pointer;width:100%;margin-top:15px}
+    button:disabled{background:#9baaba;cursor:not-allowed}
+    a{color:#134e88;font-weight:bold}
+    .status{border-radius:9px;background:#eaf0f8;padding:13px;margin-top:14px;font-weight:bold}
+    .notice{color:#5d6672;font-size:14px}
+    .links{margin-top:24px;display:flex;gap:15px;flex-wrap:wrap}
+    .links a{padding:6px 0}
+    .danger{color:#a62626}
+  </style>
+</head>
+<body>
+  <main>
+    <h1><span aria-hidden="true">🗳️</span> Controle do mesário</h1>
+    <p>Esta página é exclusiva do responsável pela votação. <strong>Confira a assinatura do aluno no papel antes de liberar a urna.</strong></p>
+    <p class="status" id="status" role="status">Consultando a urna...</p>
+    <form id="form">
+      <label for="pin">PIN do mesário (exibido na janela do servidor)</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" required placeholder="6 dígitos" pattern="[0-9]{6}">
+      <button type="submit" id="liberar">LIBERAR UM VOTO</button>
+    </form>
+    <p class="notice">Cada liberação permite registrar apenas um voto. Após a confirmação, o sistema volta a exigir liberação.</p>
+    <p id="feedback" role="alert"></p>
+    <nav class="links">
+      <a href="/" target="_blank" rel="noopener">Abrir urna</a>
+      <a href="/lista_assinaturas.html" target="_blank" rel="noopener">Imprimir lista de assinaturas</a>
+    </nav>
+    <p class="notice">Não existe cadastro de nomes nem relatório de voto por aluno. A apuração fica guardada em arquivos privados neste computador.</p>
+  </main>
+  <script src="mesario.js"></script>
+</body>
+</html>
