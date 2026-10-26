@@ -1,59 +1,57 @@
-# Urna do Grêmio Estudantil — E.E. Prof. Armando Gomes de Araújo
+# Urna do Grêmio Estudantil — Como usar (um computador)
 
-Urna das chapas **13 — Menos Bullying mais Inclusão** e **33 — Ao Infinito e Além**.
+**Funcionamento simples:** a urna fica liberada o tempo todo. Não há PIN, cadastro de alunos, tela de mesário ou MySQL.
 
-## Como usar no único computador da eleição
+## Para testar agora, sem misturar com os votos oficiais
 
-**Requer Python 3. Não precisa instalar MySQL nem cadastrar alunos.**
+1. Deixe a pasta do GitHub atualizada no computador (GitHub Desktop → Pull origin).
+2. Feche qualquer janela antiga chamada *Urna Grêmio - MODO TESTE* (Ctrl+C na janela preta).
+3. Abra **Iniciar_Teste.bat** com dois cliques. O navegador abre a urna automaticamente.
+4. Digite **13** ou **33**, confira a chapa e aperte **CONFIRMA**. Também existem BRANCO, CORRIGE e voto NULO.
+5. Depois do som e da mensagem **FIM**, a urna volta **sozinha** à digitação para o próximo voto.
+6. A janela preta deve ficar aberta durante a votação. Os votos de teste ficam em outra pasta.
 
-1. Na pasta do projeto, abra **Iniciar_Urna.bat** com dois cliques. Não feche a janela preta durante a votação.
-2. O programa abre o **Controle do Mesário** e a **Urna**. A janela preta mostrará um PIN de seis dígitos, exclusivo do mesário.
-3. Antes de cada votação, o aluno assina na lista em papel. Use o link de impressão na tela do mesário.
-4. O mesário confere a assinatura e usa o PIN para clicar **LIBERAR UM VOTO**.
-5. O eleitor digita 13 ou 33, escolhe BRANCO, ou digita número não cadastrado para nulo. CONFIRMA registra a escolha.
-6. Só depois de o registro ter sido gravado o som final toca e aparece **FIM**. A urna volta a ficar bloqueada e aguarda o próximo eleitor.
-7. Se aparecer **VOTO NÃO CONFIRMADO**, não reinicie a página: chame o mesário e aperte CONFIRMA novamente. A mesma requisição não será contada duas vezes.
+## Eleição oficial
 
-**Importante:** não utilize o Live Server do VS Code nem o GitHub Pages para uma votação real. Eles não conseguem gravar votos. Use o endereço http://127.0.0.1:8765 aberto pelo programa acima. O servidor só aceita conexões do próprio computador.
+Quando estiver tudo testado, feche a janela preta de teste e execute **Iniciar_Urna.bat**.
+O aluno assina a lista em papel, vota na urna já liberada e sai. A conferência de quem já votou é **manual, pela equipe e pela lista**; o programa não impede que o mesmo aluno volte a votar.
 
-## Armazenamento sem banco de dados
+**A urna deve ser aberta pelo arquivo .bat no Windows, NÃO pelo Live Server ou GitHub Pages**. É necessário ter Python 3 instalado, como já foi usado no teste.
 
-O sistema cria automaticamente uma pasta privada CHAMADA Urna_Gremio_Dados_Privados **ao lado da pasta do repositório**, nunca dentro do GitHub. Nela fica o arquivo apuracao_privada.json.
+## Onde ficam os votos?
 
-O arquivo contém apenas **totais por chapa (13 e 33), brancos, nulos, total geral**, e identificadores aleatórios de confirmação. Esses IDs não registram escolha, nome, matrícula, turma ou ordem de chegada.
+Os arquivos ficam em uma pasta privada, fora do GitHub, **ao lado da pasta do projeto**:
 
-**A lista de assinaturas é separada do voto.** Não será criado relatório do tipo '1º aluno assinou → votou 13'. Isso quebraria o sigilo eleitoral.
+- Oficial: **Urna_Gremio_Dados_Privados**
+- Testes: **Urna_Gremio_Dados_TESTE**
 
-## Como gerar o relatório depois da eleição
+Em cada pasta, o sistema atualiza automaticamente um CSV sequencial. Na eleição oficial, chama-se **historico_votos.csv**. Ele registra por exemplo:
 
-1. Encerre a votação; na janela do servidor, use Ctrl+C.
-2. Dê dois cliques em **Gerar_Relatorio.bat**.
-3. Abra o arquivo relatorio_apuracao.csv na pasta Urna_Gremio_Dados_Privados (ao lado do repositório).
-4. Compare o **TOTAL DE VOTOS** com a quantidade de assinaturas em papel. Registre qualquer diferença.
+| Ordem | Número/Tipo | Escolha |
+|---|---|---|
+| 1º voto | 13 | Chapa 13 - Menos Bullying mais Inclusão |
+| 2º voto | 33 | Chapa 33 - Ao Infinito e Além |
+| 3º voto | BRANCO | Branco |
 
-**Não apague a pasta de dados.** Os votos não são enviados ao GitHub nem à nuvem. Faça uma cópia de segurança protegida após encerrar a eleição.
+Para gerar a **contagem total por chapa**, depois de encerrar a votação execute **Gerar_Relatorio.bat**. Será criado `relatorio_apuracao.csv` na pasta oficial, que pode ser aberto no Excel.
 
-## Arquivos do sistema
+**Não apague a pasta de dados nem a substitua durante a eleição.** O arquivo `votos_privados.json` é a fonte para reconstruir o histórico se necessário. Após a eleição, faça uma cópia de segurança dos arquivos privados e restrinja o acesso.
 
-- servidor_urna.py — serviço Python local e gravação atômica da apuração.
-- Iniciar_Urna.bat — inicializador Windows com dois cliques.
-- mesario.html e mesario.js — liberação por PIN de um voto por vez.
-- lista_assinaturas.html — folhas numeradas prontas para impressão.
-- Gerar_Relatorio.bat — CSV de apuração para conferência.
-- script.js, index.html, style.css e assets — interface da urna e imagens/áudios.
+## Lista de assinaturas
 
-## Ensaio visual sem misturar votos oficiais
+Imprima a lista abrindo **http://127.0.0.1:8765/lista_assinaturas.html** quando estiver na urna oficial (ou porta **8766** durante o teste).
 
-Antes de usar a urna com estudantes, abra **Iniciar_Teste.bat**. Ele utiliza `http://127.0.0.1:8766` e salva os votos apenas na pasta **Urna_Gremio_Dados_TESTE**, separada da pasta oficial. Feche essa janela para encerrar o ensaio. Para a eleição de verdade, abra **Iniciar_Urna.bat**, que utiliza a porta 8765 e a pasta oficial. Nunca use os dois modos ao mesmo tempo com os alunos.
+**ATENÇÃO AO SIGILO:** a ordem das assinaturas, quando cruzada com `historico_votos.csv`, **permite identificar a chapa de cada estudante**. Isso é especialmente sensível por se tratar de alunos. Explique o procedimento à comissão eleitoral, mantenha os registros separados e restritos, e informe os estudantes de que a votação não é secreta nesse formato. Para voto secreto, use apenas totais por chapa, sem o histórico de escolhas em ordem.
 
-## Teste antes da votação
+## Arquivos principais
 
-Dê dois cliques em **Testar_Urna.bat**. Os testes simulam liberações e gravações em arquivos temporários, sem alterar a apuração verdadeira. O resultado esperado é **OK**. Esse teste automático não substitui um ensaio com mesário, duas ou mais pessoas e a impressora.
+- `Iniciar_Teste.bat` — inicia o modo de ensaio (porta 8766, arquivos separados).
+- `Iniciar_Urna.bat` — inicia a votação oficial (porta 8765).
+- `servidor_urna.py` — salva a sequência e gera os arquivos, sem banco externo.
+- `Gerar_Relatorio.bat` — gera a soma final por chapa.
+- `lista_assinaturas.html` — lista numerada imprimível.
+- `test_servidor_urna.py` e `Testar_Urna.bat` — testes automáticos opcionais.
 
-## Avisos para a comissão eleitoral
+Se o programa mostrar **VOTO NÃO CONFIRMADO**, não feche a página. Aperte CONFIRMA novamente; o sistema usa um identificador único para não somar a mesma confirmação duas vezes.
 
-Esta é uma primeira implementação local, **não uma urna eleitoral certificada ou auditada**. A lista em papel e o mesário ajudam a controlar quem vota, mas não identificam automaticamente alunos repetidos: a comissão precisa fazer essa conferência no papel.
-
-Um administrador com acesso aos arquivos enquanto a votação acontece poderia comparar totais sucessivos e inferir votos individuais. Restrinja o acesso aos arquivos privados e só faça a apuração depois de encerrar.
-
-Antes da eleição real, teste votos válidos, branco, nulo, CORRIGE, som final, bloqueio entre eleitores, queda de energia e perda de conexão. Planeje como separar votos de teste dos votos oficiais com a comissão.
+**Não foi feita certificação ou auditoria independente:** a comissão precisa testar o sistema e definir como lidar com repetição de alunos, falhas de energia e eventuais divergências antes da eleição.
