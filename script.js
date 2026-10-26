@@ -143,7 +143,7 @@ function press(key){
     }
     return;
   }
-  if(/^\\d$/.test(key)&&phase==='typing'&&typed.length<2){
+  if(/^\d$/.test(key)&&phase==='typing'&&typed.length<2){
     tocarSomTecla();
     typed+=key;
     if(typed.length===2){
