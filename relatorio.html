@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de votos — Grêmio Estudantil</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#edf2f8;color:#14243c;font:16px Arial,sans-serif;padding:28px}
+main{max-width:950px;margin:auto;background:#fff;border-radius:16px;padding:28px;box-shadow:0 10px 36px #21375214}
+h1{margin:0 0 8px;font-size:28px}
+p{line-height:1.5}
+.alerta{background:#fdf4e5;padding:12px 15px;border-radius:8px}
+.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin:22px 0}
+.cartao{background:#edf2f8;padding:16px;border-radius:10px}
+.cartao span{font-size:14px;display:block;margin-bottom:7px}
+.cartao strong{font-size:27px}
+.acoes{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0 22px}
+button{border:0;border-radius:9px;padding:12px 16px;cursor:pointer;font:700 15px Arial,sans-serif;background:#164875;color:#fff}
+button:focus-visible{outline:3px solid orange;outline-offset:2px}
+button.perigo{background:#b82b37}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid #dee5ee;padding:12px;text-align:left}
+th{background:#ecf2f8}
+td:first-child{font-weight:700;white-space:nowrap}
+.rolagem{overflow-x:auto}
+.small{color:#536273;font-size:14px}
+#aviso{min-height:1.6em;color:#a62b37;font-weight:bold}
+@media(max-width:600px){body{padding:10px}main{padding:16px}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Relatório de votação — Grêmio Estudantil</h1>
+<p>Este relatório lê os votos salvos no navegador da urna e mostra a ordem de confirmação.</p>
+<p class="alerta"><strong>Acesso restrito.</strong> Se a lista de assinaturas usa a mesma ordem, este histórico pode revelar em qual chapa cada estudante votou. Não mostre esta página aos eleitores.</p>
+<section class="resumo" id="resumo" aria-label="Totais de votos"></section>
+<div class="acoes">
+<button id="exportar" type="button">Baixar relatório CSV para abrir no VS Code</button>
+<button id="atualizar" type="button">Atualizar relatório</button>
+<button class="perigo" id="zerar" type="button">Zerar contagem</button>
+</div>
+<p id="aviso" role="status"></p>
+<div class="rolagem">
+<table>
+<thead><tr><th>Ordem</th><th>Número/Tipo</th><th>Chapa</th></tr></thead>
+<tbody id="registros"></tbody>
+</table>
+</div>
+<p class="small">Os votos só existem neste navegador e neste endereço do site. Limpar os dados do navegador pode apagá-los. Faça cópia pelo botão de exportação. O arquivo CSV baixado pode ser aberto no VS Code ou Excel; o navegador não consegue alterar automaticamente um arquivo do projeto sem permissão adicional.</p>
+</main>
+<script>
+'use strict';
+const CHAVE_VOTOS='urna_gremio_votos_v1';
+const NOMES={'13':'Menos Bullying mais Inclusão','33':'Ao Infinito e Além','BRANCO':'Branco','NULO':'Nulo'};
+const resumo=document.getElementById('resumo');
+const corpo=document.getElementById('registros');
+const aviso=document.getElementById('aviso');
+function ler(){
+  const bruto=localStorage.getItem(CHAVE_VOTOS);
+  const votos=bruto===null?[]:JSON.parse(bruto);
+  if(!Array.isArray(votos)||!votos.every((v,i)=>v&&v.ordem===i+1&&
+      Object.prototype.hasOwnProperty.call(NOMES,v.escolha))){
+    throw new Error('Histórico inválido. Não resete antes de guardar uma cópia dos dados.');
+  }
+  return votos;
+}
+function obterVotos(){
+  try{aviso.textContent='';return ler();}
+  catch(erro){aviso.textContent=erro.message||'Não foi possível ler os votos.';return null;}
+}
+function renderizar(){
+  const votos=obterVotos();
+  resumo.replaceChildren();corpo.replaceChildren();
+  if(votos===null)return;
+  const contagem={'13':0,'33':0,'BRANCO':0,'NULO':0};
+  for(const voto of votos)contagem[voto.escolha]++;
+  for(const [rotulo,quantidade] of [
+    ['Total de votos',votos.length],
+    ['Chapa 13',contagem['13']],['Chapa 33',contagem['33']],
+    ['Brancos',contagem.BRANCO],['Nulos',contagem.NULO]
+  ]){
+    const cartao=document.createElement('div');
+    cartao.className='cartao';
+    const nome=document.createElement('span');nome.textContent=rotulo;
+    const numero=document.createElement('strong');numero.textContent=quantidade;
+    cartao.append(nome,numero);resumo.appendChild(cartao);
+  }
+  if(!votos.length){
+    const tr=document.createElement('tr');
+    const td=document.createElement('td');td.colSpan=3;td.textContent='Nenhum voto registrado neste navegador.';
+    tr.appendChild(td);corpo.appendChild(tr);
+  }
+  for(const voto of votos){
+    const tr=document.createElement('tr');
+    for(const texto of [voto.ordem+'º voto',voto.escolha,NOMES[voto.escolha]]){
+      const td=document.createElement('td');td.textContent=texto;tr.appendChild(td);
+    }
+    corpo.appendChild(tr);
+  }
+}
+document.getElementById('atualizar').addEventListener('click',renderizar);
+document.getElementById('exportar').addEventListener('click',()=>{
+  const votos=obterVotos();if(votos===null)return;
+  const linhas=[['Ordem','Número/Tipo','Chapa'],...votos.map(v=>[v.ordem+'º voto',v.escolha,NOMES[v.escolha]])];
+  const csv='\ufeff'+linhas.map(cols=>cols.map(valor=>'"'+String(valor).replace(/"/g,'""')+'"').join(';')).join('\r\n')+'\r\n';
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='relatorio_votos_gremio.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+});
+document.getElementById('zerar').addEventListener('click',()=>{
+  const votos=obterVotos();if(votos===null)return;
+  if(!confirm('Tem certeza de que deseja APAGAR todos os '+votos.length+' votos salvos neste navegador? Esta ação não pode ser desfeita.'))return;
+  if(prompt('Para confirmar a exclusão definitiva, digite ZERAR:')!=='ZERAR')return;
+  try{localStorage.removeItem(CHAVE_VOTOS);renderizar();aviso.textContent='Contagem zerada. O próximo registro será 1º voto.';}
+  catch(erro){aviso.textContent='Não foi possível zerar: '+erro.message;}
+});
+window.addEventListener('storage',evento=>{if(evento.key===CHAVE_VOTOS)renderizar();});
+window.addEventListener('focus',renderizar);
+renderizar();
+</script>
+</body>
+</html>
