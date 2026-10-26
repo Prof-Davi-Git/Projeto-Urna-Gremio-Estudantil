@@ -1,4 +1,4 @@
-// Urna sempre liberada; cada confirmação é registrada no servidor local.
+// Urna simples: registro local no navegador, sem servidor Python nem banco.
 // Coordenadas em pixels da ARTE ORIGINAL 1536 x 1024.
 // O CSS recorta a frente da máquina usando estas mesmas dimensões.
 const crop={x:60,y:172,width:1430,height:651};
@@ -17,8 +17,8 @@ const somTecla=new Audio('assets/bip-scanner.mp3');
 const somFim=new Audio('assets/fim-som-da-urna.mp3');
 somTecla.preload='auto';
 somFim.preload='auto';
-let phase='checking',typed='',selected='';
-let identificadorVoto=null;
+const CHAVE_VOTOS='urna_gremio_votos_v1';
+let phase='typing',typed='',selected='';
 let mensagemErro='';
 let temporizadorRetorno=null;
 let temporizadorSeguranca=null;
@@ -41,7 +41,6 @@ function reiniciarUrna(){
   phase='typing';
   typed='';
   selected='';
-  identificadorVoto=null;
   render();
 }
 function agendarReinicio(espera=1400){
@@ -66,70 +65,34 @@ function finalizarVotacao(){
   temporizadorSeguranca=setTimeout(()=>agendarReinicio(0),6000);
 }
 
-// Evita usar a interface nova com o servidor Python antigo ainda aberto.
-// Nunca permita confirmar um voto enquanto não houver servidor compatível.
-async function verificarServidor(){
-  try{
-    const resposta=await fetch('/api/status',{cache:'no-store'});
-    if(!resposta.ok)throw new Error('Servidor indisponível');
-    const estado=await resposta.json();
-    if(!estado.servidor_local||estado.versao_api!==2){
-      phase='outdated';
-    }else{
-      phase='typing';
-    }
-  }catch{
-    phase='offline';
+// Salva a sequência dos votos neste navegador, neste mesmo endereço.
+// O relatório pode ser consultado/exportado na página relatorio.html.
+function salvarVoto(escolha){
+  const bruto=localStorage.getItem(CHAVE_VOTOS);
+  const votos=bruto===null?[]:JSON.parse(bruto);
+  if(!Array.isArray(votos)||!votos.every(v=>v&&
+      Number.isInteger(v.ordem)&&typeof v.escolha==='string')){
+    throw new Error('O histórico local está inválido. Não foi adicionado nenhum voto.');
   }
-  render();
+  const numero=votos.length+1;
+  votos.push({ordem:numero,escolha,registradoEm:new Date().toISOString()});
+  localStorage.setItem(CHAVE_VOTOS,JSON.stringify(votos));
 }
-
-// O identificador aleatório evita contar duas vezes se o navegador repetir
-// a requisição. O servidor grava separadamente ordem + escolha do voto.
-async function registrarVoto(){
-  if(phase!=='review' && phase!=='error')return;
-  if(!identificadorVoto){
-    try{identificadorVoto=crypto.randomUUID();}
-    catch{
-      mensagemErro='Abra a urna pelo Iniciar_Teste.bat, usando o endereço 127.0.0.1.';
-      phase='error';render();return;
-    }
-  }
-  const escolha=selected==='BRANCO'?'BRANCO':Object.hasOwn(chapas,selected)?selected:'NULO';
-  phase='saving';
-  render();
-  const controlador=new AbortController();
-  const limite=setTimeout(()=>controlador.abort(),12000);
+function registrarVoto(){
+  if(phase!=='review'&&phase!=='error')return;
+  const escolha=selected==='BRANCO'?'BRANCO':
+    Object.prototype.hasOwnProperty.call(chapas,selected)?selected:'NULO';
   try{
-    const r=await fetch('/api/voto',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({escolha,identificador:identificadorVoto}),
-      cache:'no-store',
-      signal:controlador.signal
-    });
-    const tipo=r.headers.get('content-type')||'';
-    if(!tipo.includes('application/json')){
-      throw new Error('Servidor incorreto. Feche a janela preta antiga e abra Iniciar_Teste.bat novamente.');
-    }
-    const dados=await r.json();
-    if(!r.ok||!dados.ok){
-      if(r.status===409 && /mesário|libera/i.test(dados.erro||'')){
-        phase='outdated';render();return;
-      }
-      throw new Error(dados.erro||'Falha ao registrar o voto');
-    }
-    finalizarVotacao(); // O som final e FIM só acontecem após persistência.
+    salvarVoto(escolha);
+    mensagemErro='';
+    finalizarVotacao();
   }catch(erro){
-    mensagemErro=erro instanceof TypeError
-      ? 'Conexão perdida. Confira se Iniciar_Teste.bat está aberto.'
-      : (erro.message||'Erro de conexão');
+    mensagemErro=(erro&&erro.message)||'Não foi possível salvar neste navegador.';
     phase='error';
     render();
-  }finally{
-    clearTimeout(limite);
   }
 }
+
 for(const [label,x,y,w,h] of buttons){
   const key=document.createElement('button');
   key.type='button';
@@ -160,17 +123,9 @@ const chapas=Object.freeze({
 });
 function render(){
   visor.classList.add('visible');
-  if(phase==='checking'){
-    visor.innerHTML='<div><h1>PREPARANDO URNA</h1><p class="info">Conferindo conexão com o servidor...</p></div>';
-  }else if(phase==='outdated'){
-    visor.innerHTML='<div><h1>REINICIE O SERVIDOR</h1><p class="info">A janela preta está executando a versão antiga.<br>Feche-a e abra Iniciar_Teste.bat novamente. Depois atualize esta página.</p></div>';
-  }else if(phase==='offline'){
-    visor.innerHTML='<div><h1>URNA SEM CONEXÃO</h1><p class="info">Abra Iniciar_Teste.bat. O Live Server e o GitHub Pages não registram votos.</p></div>';
-  }else if(phase==='saving'){
-    visor.innerHTML='<div><h1>REGISTRANDO VOTO</h1><p class="info">Aguarde a confirmação do armazenamento.</p></div>';
-  }else if(phase==='error'){
-    visor.innerHTML='<div><h1>VOTO NÃO CONFIRMADO</h1><p class="info" id="detalhe-erro"></p><p class="info">Não feche a urna. Pressione CONFIRMA para tentar novamente.</p></div>';
-    document.getElementById('detalhe-erro').textContent=mensagemErro||'Falha de gravação';
+  if(phase==='error'){
+    visor.innerHTML='<div><h1>VOTO NÃO SALVO</h1><p class="info" id="detalhe-erro"></p><p class="info">Não saia desta tela. Pressione CONFIRMA para tentar novamente.</p></div>';
+    document.getElementById('detalhe-erro').textContent=mensagemErro;
   }else if(phase==='typing'){
     visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+typed.padEnd(2,'_')+'</div><p class="info">Use as teclas da urna.</p></div>';
   }else if(phase==='review'&&selected==='BRANCO'){
@@ -205,7 +160,6 @@ function press(key){
     tocarSomTecla();
     typed='';
     selected='';
-    identificadorVoto=null;
     phase='typing';
     render();
     return;
@@ -252,4 +206,3 @@ document.getElementById('tela-cheia').addEventListener('click',async()=>{
   }
 });
 render();
-verificarServidor();
