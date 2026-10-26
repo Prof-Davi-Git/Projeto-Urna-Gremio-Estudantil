@@ -1,4 +1,4 @@
-// Interação da urna escolar (sem registrar votos nesta etapa).
+// Urna conectada ao servidor local: só exibir FIM após voto gravado com sucesso.
 // Coordenadas em pixels da ARTE ORIGINAL 1536 x 1024.
 // O CSS recorta a frente da máquina usando estas mesmas dimensões.
 const crop={x:60,y:172,width:1430,height:651};
@@ -17,7 +17,9 @@ const somTecla=new Audio('assets/bip-scanner.mp3');
 const somFim=new Audio('assets/fim-som-da-urna.mp3');
 somTecla.preload='auto';
 somFim.preload='auto';
-let phase='typing',typed='',selected='';
+let phase='locked',typed='',selected='';
+let identificadorVoto=null;
+let mensagemErro='';
 let temporizadorRetorno=null;
 let temporizadorSeguranca=null;
 
@@ -36,10 +38,12 @@ function reiniciarUrna(){
   clearTimeout(temporizadorSeguranca);
   temporizadorRetorno=null;
   temporizadorSeguranca=null;
-  phase='typing';
+  phase='locked';
   typed='';
   selected='';
+  identificadorVoto=null;
   render();
+  verificarLiberacao();
 }
 function agendarReinicio(espera=1400){
   if(phase!=='finished'||temporizadorRetorno!==null)return;
@@ -62,6 +66,53 @@ function finalizarVotacao(){
   // Segurança caso o navegador não dispare o evento ended.
   temporizadorSeguranca=setTimeout(()=>agendarReinicio(0),6000);
 }
+
+async function verificarLiberacao(){
+  if(phase!=='locked' && phase!=='offline')return;
+  try{
+    const r=await fetch('/api/status',{cache:'no-store'});
+    if(!r.ok)throw new Error('Servidor local não encontrado');
+    const dados=await r.json();
+    if(!dados.servidor_local)throw new Error('Servidor incompatível');
+    if(phase!=='locked' && phase!=='offline')return;
+    phase=dados.liberada?'typing':'locked';
+  }catch{
+    if(phase==='locked'||phase==='offline')phase='offline';
+  }
+  render();
+}
+
+// O identificador aleatório protege contra contagem duplicada em caso
+// de perda de resposta. Ele NÃO contém nome, ordem de chegada nem chapa.
+async function registrarVoto(){
+  if(phase!=='review' && phase!=='error')return;
+  if(!identificadorVoto)identificadorVoto=crypto.randomUUID();
+  const escolha=selected==='BRANCO'?'BRANCO':Object.hasOwn(chapas,selected)?selected:'NULO';
+  phase='saving';
+  render();
+  const controlador=new AbortController();
+  const limite=setTimeout(()=>controlador.abort(),12000);
+  try{
+    const r=await fetch('/api/voto',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({escolha,identificador:identificadorVoto}),
+      cache:'no-store',
+      signal:controlador.signal
+    });
+    const dados=await r.json();
+    if(!r.ok||!dados.ok)throw new Error(dados.erro||'Falha ao registrar o voto');
+    finalizarVotacao(); // O som final e FIM só acontecem após persistência.
+  }catch(erro){
+    mensagemErro=erro.message||'Erro de conexão';
+    phase='error';
+    render();
+  }finally{
+    clearTimeout(limite);
+  }
+}
+setInterval(verificarLiberacao,1000);
+
 for(const [label,x,y,w,h] of buttons){
   const key=document.createElement('button');
   key.type='button';
@@ -92,7 +143,15 @@ const chapas=Object.freeze({
 });
 function render(){
   visor.classList.add('visible');
-  if(phase==='typing'){
+  if(phase==='locked'){
+    visor.innerHTML='<div><h1>AGUARDE O MESÁRIO</h1><p class="info">Assine a lista de presença e aguarde a liberação.</p></div>';
+  }else if(phase==='offline'){
+    visor.innerHTML='<div><h1>SISTEMA NÃO CONECTADO</h1><p class="info">Inicie a urna pelo programa local e chame o mesário.</p></div>';
+  }else if(phase==='saving'){
+    visor.innerHTML='<div><h1>REGISTRANDO VOTO</h1><p class="info">Aguarde a confirmação do armazenamento.</p></div>';
+  }else if(phase==='error'){
+    visor.innerHTML='<div><h1>VOTO NÃO CONFIRMADO</h1><p class="info">Não saia desta tela. Chame o mesário.<br>Pressione CONFIRMA para tentar novamente.</p></div>';
+  }else if(phase==='typing'){
     visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+typed.padEnd(2,'_')+'</div><p class="info">Use as teclas da urna.</p></div>';
   }else if(phase==='review'&&selected==='BRANCO'){
     visor.innerHTML='<div><p class="subtitle">CONFIRA SUA ESCOLHA</p><h1>VOTO EM BRANCO</h1><p class="info">CONFIRMA para concluir.<br>CORRIGE para voltar.</p></div>';
@@ -117,11 +176,16 @@ function render(){
   }
 }
 function press(key){
-  if(phase==='finished')return;
+  if(phase==='error'){
+    if(key==='CONFIRMA')registrarVoto();
+    return;
+  }
+  if(phase==='finished'||phase==='saving'||phase==='locked'||phase==='offline')return;
   if(key==='CORRIGE'){
     tocarSomTecla();
     typed='';
     selected='';
+    identificadorVoto=null;
     phase='typing';
     render();
     return;
@@ -135,7 +199,7 @@ function press(key){
   }
   if(key==='CONFIRMA'){
     if(phase==='review'){
-      finalizarVotacao();
+      registrarVoto();
     }else if(phase==='typing'&&typed.length===2){
       selected=typed;
       phase='review';
@@ -168,3 +232,4 @@ document.getElementById('tela-cheia').addEventListener('click',async()=>{
   }
 });
 render();
+verificarLiberacao();
