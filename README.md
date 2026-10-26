@@ -1,64 +1,37 @@
-# Urna do Grêmio Estudantil — Como usar (um computador)
+# Urna do Grêmio Estudantil — Versão simples
 
-**Funcionamento simples:** a urna fica liberada o tempo todo. Não há PIN, cadastro de alunos, tela de mesário ou MySQL.
+Projeto da E.E. Prof. Armando Gomes de Araújo.
 
-## Para testar agora, sem misturar com os votos oficiais
+**Sem Python, sem arquivos BAT, sem banco de dados e sem cadastro de alunos.** Só HTML, CSS e JavaScript. As chapas continuam cadastradas: **13 — Menos Bullying mais Inclusão** e **33 — Ao Infinito e Além**.
 
-1. Deixe a pasta do GitHub atualizada no computador (GitHub Desktop → Pull origin).
-2. Feche qualquer janela antiga chamada *Urna Grêmio - MODO TESTE* (Ctrl+C na janela preta).
-3. Abra **Iniciar_Teste.bat** com dois cliques. O navegador abre a urna automaticamente.
-4. Digite **13** ou **33**, confira a chapa e aperte **CONFIRMA**. Também existem BRANCO, CORRIGE e voto NULO.
-5. Depois do som e da mensagem **FIM**, a urna volta **sozinha** à digitação para o próximo voto.
-6. A janela preta deve ficar aberta durante a votação. Os votos de teste ficam em outra pasta.
+## Como abrir
 
-## Eleição oficial
+1. Atualize o repositório no GitHub Desktop (Pull origin).
+2. Abra a pasta no VS Code e use **Go Live** (Live Server) para abrir `index.html`.
+3. A urna já inicia mostrando **Digite o número da chapa**.
+4. Digite 13 ou 33, confira a foto e o logo, e pressione **CONFIRMA**. Também há BRANCO, CORRIGE e voto NULO para número não cadastrado.
+5. Após **registrar no navegador**, toca o som final, aparece **FIM** e a urna volta sozinha à digitação.
 
-Quando estiver tudo testado, feche a janela preta de teste e execute **Iniciar_Urna.bat**.
-O aluno assina a lista em papel, vota na urna já liberada e sai. A conferência de quem já votou é **manual, pela equipe e pela lista**; o programa não impede que o mesmo aluno volte a votar.
+## Como consultar, baixar e zerar os votos
 
-**A urna deve ser aberta pelo arquivo .bat no Windows, NÃO pelo Live Server ou GitHub Pages**. É necessário ter Python 3 instalado, como já foi usado no teste.
+Abra **`relatorio.html` pelo MESMO Live Server, no MESMO navegador/perfil e porta da urna.** Por exemplo, se a urna abrir em `http://127.0.0.1:5500/index.html`, o relatório estará em `http://127.0.0.1:5500/relatorio.html`.
 
-## Onde ficam os votos?
+No relatório você verá os votos **em sequência** (1º voto, 2º voto etc.), as chapas 13/33, brancos e nulos, e os totais. Nele existem três botões:
 
-Os arquivos ficam em uma pasta privada, fora do GitHub, **ao lado da pasta do projeto**:
+- **Baixar relatório CSV para abrir no VS Code:** gera `relatorio_votos_gremio.csv` em Downloads. Você pode abri-lo no VS Code ou colocá-lo na pasta do projeto.
+- **Atualizar relatório:** relê os dados da urna.
+- **Zerar contagem:** requer confirmação e a palavra `ZERAR`. Apaga os registros desse navegador e faz a sequência recomeçar do 1º voto. Faça uma cópia do CSV ANTES de zerar.
 
-- Oficial: **Urna_Gremio_Dados_Privados**
-- Testes: **Urna_Gremio_Dados_TESTE**
+**Limitação do navegador:** um site estático NÃO consegue alterar automaticamente arquivos do repositório que aparecem no VS Code. Portanto, os dados são salvos automaticamente no **localStorage do navegador**, mas o CSV só é criado no computador quando você clica para baixar. Não é uma planilha atualizada automaticamente no disco. Os dados NÃO vão ao GitHub.
 
-Em cada pasta, o sistema atualiza automaticamente um CSV sequencial. Na eleição oficial, chama-se **historico_votos.csv**. Ele registra por exemplo:
+**Use sempre o mesmo endereço e perfil do navegador:** `127.0.0.1:5500`, `localhost:5500`, outro número de porta e GitHub Pages podem guardar dados em lugares separados. Limpar dados do navegador, usar modo anônimo ou mudar de computador pode apagar ou ocultar os registros. Faça exportações periódicas.
 
-| Ordem | Número/Tipo | Escolha |
-|---|---|---|
-| 1º voto | 13 | Chapa 13 - Menos Bullying mais Inclusão |
-| 2º voto | 33 | Chapa 33 - Ao Infinito e Além |
-| 3º voto | BRANCO | Branco |
+## Sobre votos anteriores
 
-Para gerar a **contagem total por chapa**, depois de encerrar a votação execute **Gerar_Relatorio.bat**. Será criado `relatorio_apuracao.csv` na pasta oficial, que pode ser aberto no Excel.
+Se você chegou a utilizar o sistema antigo com Python, os dados anteriores continuam na pasta privada que ele criou, fora do repositório. A nova versão **não importa automaticamente** esses registros. Não apague essa pasta sem conferir a existência dos dados.
 
-**Não apague a pasta de dados nem a substitua durante a eleição.** O arquivo `votos_privados.json` é a fonte para reconstruir o histórico se necessário. Após a eleição, faça uma cópia de segurança dos arquivos privados e restrinja o acesso.
+## Aviso importante para a eleição
 
-## Se o botão CONFIRMA não finalizar o voto
+O histórico por ordem associado à folha de assinaturas permite identificar a escolha de cada aluno: **a votação não é secreta nesse formato**. Informe isso aos estudantes e à comissão, e limite o acesso ao relatório. Para uma votação sigilosa e com maior segurança contra perda/alteração de dados, é necessário um sistema de apuração diferente.
 
-Se o código foi atualizado com a janela preta antiga ainda aberta, o navegador novo pode falar com o servidor Python anterior. **Feche a janela preta antiga (Ctrl+C), atualize o projeto pelo GitHub Desktop (Pull origin), abra Iniciar_Teste.bat de novo e atualize a página da urna com Ctrl+Shift+R.** A votação de teste deve estar em `http://127.0.0.1:8766/`; a oficial, em `http://127.0.0.1:8765/`.
-
-A urna agora identifica o servidor incompatível: mostrará **REINICIE O SERVIDOR** em vez de permitir um voto que não será gravado. Se aparecer **VOTO NÃO CONFIRMADO**, a tela exibe o motivo. O sistema só toca o som final e mostra **FIM** depois que o arquivo de dados principal foi salvo corretamente. Não abra o CSV de histórico no Excel durante a votação; um arquivo aberto pode impedir sua atualização, mesmo que o voto permaneça salvo no JSON principal.
-
-## Lista de assinaturas
-
-Imprima a lista abrindo **http://127.0.0.1:8765/lista_assinaturas.html** quando estiver na urna oficial (ou porta **8766** durante o teste).
-
-**ATENÇÃO AO SIGILO:** a ordem das assinaturas, quando cruzada com `historico_votos.csv`, **permite identificar a chapa de cada estudante**. Isso é especialmente sensível por se tratar de alunos. Explique o procedimento à comissão eleitoral, mantenha os registros separados e restritos, e informe os estudantes de que a votação não é secreta nesse formato. Para voto secreto, use apenas totais por chapa, sem o histórico de escolhas em ordem.
-
-**Arquivos necessários:** `Iniciar_Teste.bat` (ensaio), `Iniciar_Urna.bat` (votação oficial), `Abrir_Votos.bat` (abrir os registros), `Gerar_Relatorio.bat` (total final) e os arquivos internos do site e servidor. Os antigos arquivos do mesário, testes automatizados e imagens de baixa resolução foram excluídos.
-
-## Arquivos principais
-
-- `Iniciar_Teste.bat` — inicia o modo de ensaio (porta 8766, arquivos separados).
-- `Iniciar_Urna.bat` — inicia a votação oficial (porta 8765).
-- `servidor_urna.py` — salva a sequência e gera os arquivos, sem banco externo.
-- `Gerar_Relatorio.bat` — gera a soma final por chapa.
-- `lista_assinaturas.html` — lista numerada imprimível.
-
-Se o programa mostrar **VOTO NÃO CONFIRMADO**, não feche a página. Aperte CONFIRMA novamente; o sistema usa um identificador único para não somar a mesma confirmação duas vezes.
-
-**Não foi feita certificação ou auditoria independente:** a comissão precisa testar o sistema e definir como lidar com repetição de alunos, falhas de energia e eventuais divergências antes da eleição.
+Esta versão é adequada para **ensaio e uso simples, com as limitações assumidas pela escola**. Não é auditada: armazenamento no navegador pode ser apagado ou alterado. Antes da votação, realize testes, faça backup dos arquivos CSV e confira os totais.
