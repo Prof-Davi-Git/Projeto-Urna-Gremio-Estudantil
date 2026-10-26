@@ -30,8 +30,8 @@ button:focus-visible{outline:3px solid #facc15;outline-offset:2px}
 .chapa-heading{flex:none;min-width:0;max-width:100%}
 .chapa-numero{font-size:clamp(12px,2.25vmin,28px)!important;font-weight:850;letter-spacing:.07em;color:#263c5e;margin:0}
 .visor .chapa-heading h1{font-size:clamp(17px,3.4vmin,43px);line-height:1.12;margin:.1em auto .15em;max-width:100%}
-.chapa-media{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:1fr 1.14fr;gap:clamp(5px,1.3vw,18px);align-items:center;justify-items:center}
+.chapa-media{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr);gap:clamp(5px,1vw,14px);align-items:stretch;justify-items:stretch}
 .chapa-figure{width:100%;height:100%;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.chapa-figure img{display:block;max-width:100%;max-height:100%;height:auto;width:auto;object-fit:contain;border-radius:clamp(2px,.65vmin,8px)}
+.chapa-figure img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;image-rendering:auto;border-radius:clamp(2px,.65vmin,8px)}
 .chapa-instructions{flex:none;margin:0!important;font-size:clamp(10px,1.9vmin,23px)!important;font-weight:700;color:#344b69}
 @media(max-width:650px){.visor .chapa-heading h1{font-size:clamp(11px,2.8vmin,18px)}.chapa-numero{font-size:10px!important}.chapa-instructions{font-size:8px!important}.chapa-media{gap:4px}}
