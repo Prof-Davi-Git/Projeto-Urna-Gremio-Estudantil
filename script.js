@@ -17,7 +17,7 @@ const somTecla=new Audio('assets/bip-scanner.mp3');
 const somFim=new Audio('assets/fim-som-da-urna.mp3');
 somTecla.preload='auto';
 somFim.preload='auto';
-let phase='typing',typed='',selected='';
+let phase='checking',typed='',selected='';
 let identificadorVoto=null;
 let mensagemErro='';
 let temporizadorRetorno=null;
@@ -66,11 +66,35 @@ function finalizarVotacao(){
   temporizadorSeguranca=setTimeout(()=>agendarReinicio(0),6000);
 }
 
+// Evita usar a interface nova com o servidor Python antigo ainda aberto.
+// Nunca permita confirmar um voto enquanto não houver servidor compatível.
+async function verificarServidor(){
+  try{
+    const resposta=await fetch('/api/status',{cache:'no-store'});
+    if(!resposta.ok)throw new Error('Servidor indisponível');
+    const estado=await resposta.json();
+    if(!estado.servidor_local||estado.versao_api!==2){
+      phase='outdated';
+    }else{
+      phase='typing';
+    }
+  }catch{
+    phase='offline';
+  }
+  render();
+}
+
 // O identificador aleatório evita contar duas vezes se o navegador repetir
 // a requisição. O servidor grava separadamente ordem + escolha do voto.
 async function registrarVoto(){
   if(phase!=='review' && phase!=='error')return;
-  if(!identificadorVoto)identificadorVoto=crypto.randomUUID();
+  if(!identificadorVoto){
+    try{identificadorVoto=crypto.randomUUID();}
+    catch{
+      mensagemErro='Abra a urna pelo Iniciar_Teste.bat, usando o endereço 127.0.0.1.';
+      phase='error';render();return;
+    }
+  }
   const escolha=selected==='BRANCO'?'BRANCO':Object.hasOwn(chapas,selected)?selected:'NULO';
   phase='saving';
   render();
@@ -84,11 +108,22 @@ async function registrarVoto(){
       cache:'no-store',
       signal:controlador.signal
     });
+    const tipo=r.headers.get('content-type')||'';
+    if(!tipo.includes('application/json')){
+      throw new Error('Servidor incorreto. Feche a janela preta antiga e abra Iniciar_Teste.bat novamente.');
+    }
     const dados=await r.json();
-    if(!r.ok||!dados.ok)throw new Error(dados.erro||'Falha ao registrar o voto');
+    if(!r.ok||!dados.ok){
+      if(r.status===409 && /mesário|libera/i.test(dados.erro||'')){
+        phase='outdated';render();return;
+      }
+      throw new Error(dados.erro||'Falha ao registrar o voto');
+    }
     finalizarVotacao(); // O som final e FIM só acontecem após persistência.
   }catch(erro){
-    mensagemErro=erro.message||'Erro de conexão';
+    mensagemErro=erro instanceof TypeError
+      ? 'Conexão perdida. Confira se Iniciar_Teste.bat está aberto.'
+      : (erro.message||'Erro de conexão');
     phase='error';
     render();
   }finally{
@@ -125,10 +160,17 @@ const chapas=Object.freeze({
 });
 function render(){
   visor.classList.add('visible');
-  if(phase==='saving'){
+  if(phase==='checking'){
+    visor.innerHTML='<div><h1>PREPARANDO URNA</h1><p class="info">Conferindo conexão com o servidor...</p></div>';
+  }else if(phase==='outdated'){
+    visor.innerHTML='<div><h1>REINICIE O SERVIDOR</h1><p class="info">A janela preta está executando a versão antiga.<br>Feche-a e abra Iniciar_Teste.bat novamente. Depois atualize esta página.</p></div>';
+  }else if(phase==='offline'){
+    visor.innerHTML='<div><h1>URNA SEM CONEXÃO</h1><p class="info">Abra Iniciar_Teste.bat. O Live Server e o GitHub Pages não registram votos.</p></div>';
+  }else if(phase==='saving'){
     visor.innerHTML='<div><h1>REGISTRANDO VOTO</h1><p class="info">Aguarde a confirmação do armazenamento.</p></div>';
   }else if(phase==='error'){
-    visor.innerHTML='<div><h1>VOTO NÃO CONFIRMADO</h1><p class="info">Não saia desta tela. Chame o mesário.<br>Pressione CONFIRMA para tentar novamente.</p></div>';
+    visor.innerHTML='<div><h1>VOTO NÃO CONFIRMADO</h1><p class="info" id="detalhe-erro"></p><p class="info">Não feche a urna. Pressione CONFIRMA para tentar novamente.</p></div>';
+    document.getElementById('detalhe-erro').textContent=mensagemErro||'Falha de gravação';
   }else if(phase==='typing'){
     visor.innerHTML='<div><p class="subtitle">VOTAÇÃO DO GRÊMIO ESTUDANTIL</p><h1>Digite o número da chapa</h1><div class="digits">'+typed.padEnd(2,'_')+'</div><p class="info">Use as teclas da urna.</p></div>';
   }else if(phase==='review'&&selected==='BRANCO'){
@@ -158,7 +200,7 @@ function press(key){
     if(key==='CONFIRMA')registrarVoto();
     return;
   }
-  if(phase==='finished'||phase==='saving')return;
+  if(phase!=='review'&&phase!=='typing')return;
   if(key==='CORRIGE'){
     tocarSomTecla();
     typed='';
@@ -210,3 +252,4 @@ document.getElementById('tela-cheia').addEventListener('click',async()=>{
   }
 });
 render();
+verificarServidor();
