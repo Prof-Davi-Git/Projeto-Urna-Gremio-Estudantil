@@ -42,6 +42,10 @@ O arquivo contém apenas **totais por chapa (13 e 33), brancos, nulos, total ger
 - Gerar_Relatorio.bat — CSV de apuração para conferência.
 - script.js, index.html, style.css e assets — interface da urna e imagens/áudios.
 
+## Ensaio visual sem misturar votos oficiais
+
+Antes de usar a urna com estudantes, abra **Iniciar_Teste.bat**. Ele utiliza `http://127.0.0.1:8766` e salva os votos apenas na pasta **Urna_Gremio_Dados_TESTE**, separada da pasta oficial. Feche essa janela para encerrar o ensaio. Para a eleição de verdade, abra **Iniciar_Urna.bat**, que utiliza a porta 8765 e a pasta oficial. Nunca use os dois modos ao mesmo tempo com os alunos.
+
 ## Teste antes da votação
 
 Dê dois cliques em **Testar_Urna.bat**. Os testes simulam liberações e gravações em arquivos temporários, sem alterar a apuração verdadeira. O resultado esperado é **OK**. Esse teste automático não substitui um ensaio com mesário, duas ou mais pessoas e a impressora.
