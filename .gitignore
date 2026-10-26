@@ -1,0 +1,6 @@
+# Dados e arquivos privados da votação nunca devem ser publicados
+Urna_Gremio_Dados_Privados/
+*.tmp
+__pycache__/
+*.pyc
+.DS_Store
